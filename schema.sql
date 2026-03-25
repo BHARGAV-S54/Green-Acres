@@ -128,7 +128,7 @@ VALUES
     ('Organic Farmer',
      'demo_farmer',
      'demo@agriconnect.in',
-     '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',  -- bcrypt of "farmer123"
+     '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
      'Organic Farmer & Agri-Tech Enthusiast',
      'Andhra Pradesh, India',
      'Passionate about sustainable farming and agri-technology. Sharing knowledge with fellow farmers.',
@@ -141,7 +141,7 @@ VALUES
     ('Rajesh Kumar',
      'rajesh_farmer',
      'rajesh@agriconnect.in',
-     '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',
+     '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
      'Traditional Wheat Farmer',
      'Punjab, India',
      'Third generation wheat farmer from Punjab. I swear by drip irrigation!',

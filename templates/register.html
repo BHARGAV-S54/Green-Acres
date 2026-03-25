@@ -7,10 +7,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <style>
+        .input-status { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+        .input-valid { color: #22c55e; }
+        .input-invalid { color: #ef4444; }
+        .input-pending { color: #f59e0b; }
+        .field-error { color: #ef4444; font-size: 12px; margin-top: 4px; display: none; }
+        .input-wrap.error { border-color: #ef4444; }
+        .input-wrap.success { border-color: #22c55e; }
+    </style>
 </head>
 <body class="auth-body">
     <div class="auth-split">
-        <!-- Brand Panel -->
         <div class="auth-brand">
             <div class="brand-inner">
                 <div class="brand-logo">
@@ -21,26 +29,26 @@
                 <p class="brand-sub">Share updates, discover market listings, chat with other farmers, and grow your farming network – all in one place.</p>
                 <ul class="brand-features">
                     <li><i class="fa-solid fa-check-circle"></i> Free to join</li>
-                    <li><i class="fa-solid fa-check-circle"></i> Buy &amp; Sell in the Market</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Buy & Sell in the Market</li>
                     <li><i class="fa-solid fa-check-circle"></i> Connect with nearby farmers</li>
                     <li><i class="fa-solid fa-check-circle"></i> Get local weather updates</li>
                 </ul>
             </div>
         </div>
 
-        <!-- Register Form -->
         <div class="auth-form-panel">
             <div class="auth-card">
                 <h2 class="auth-title">Create Account 🌾</h2>
                 <p class="auth-subtitle">Start your AgriConnect journey</p>
 
-                {% if error %}
-                <div class="auth-alert error">
-                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                <div class="auth-alert error" id="register-error" style="display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i> <span id="reg-error-message"></span>
                 </div>
-                {% endif %}
+                <div class="auth-alert success" id="register-success" style="display: none;">
+                    <i class="fa-solid fa-check-circle"></i> <span id="reg-success-message"></span>
+                </div>
 
-                <form method="POST" action="/register" id="register-form">
+                <form id="register-form">
                     <div class="input-row">
                         <div class="input-group">
                             <label for="full_name">Full Name</label>
@@ -51,18 +59,22 @@
                         </div>
                         <div class="input-group">
                             <label for="username">Username</label>
-                            <div class="input-wrap">
+                            <div class="input-wrap" id="username-wrap">
                                 <i class="fa-solid fa-at input-icon"></i>
-                                <input type="text" id="username" name="username" placeholder="rajesh_farmer" required>
+                                <input type="text" id="username" name="username" placeholder="rajesh_farmer" required minlength="3">
+                                <span class="input-status" id="username-status"></span>
                             </div>
+                            <div class="field-error" id="username-error">Username must be at least 3 characters</div>
                         </div>
                     </div>
                     <div class="input-group">
                         <label for="email">Email Address</label>
-                        <div class="input-wrap">
+                        <div class="input-wrap" id="email-wrap">
                             <i class="fa-regular fa-envelope input-icon"></i>
                             <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                            <span class="input-status" id="email-status"></span>
                         </div>
+                        <div class="field-error" id="email-error">Invalid email format</div>
                     </div>
                     <div class="input-group">
                         <label for="title">Farm / Profession</label>
@@ -83,23 +95,29 @@
                             <label for="password">Password</label>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-lock input-icon"></i>
-                                <input type="password" id="password" name="password" placeholder="min 6 chars" required>
+                                <input type="password" id="password" name="password" placeholder="min 6 chars" required minlength="6">
                                 <button type="button" class="toggle-pw" onclick="togglePw('password', this)">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
                             </div>
+                            <div class="field-error" id="password-error">Password must be at least 6 characters</div>
                         </div>
                         <div class="input-group">
                             <label for="confirm_password">Confirm Password</label>
-                            <div class="input-wrap">
+                            <div class="input-wrap" id="confirm-wrap">
                                 <i class="fa-solid fa-lock input-icon"></i>
                                 <input type="password" id="confirm_password" name="confirm_password" placeholder="repeat password" required>
+                                <span class="input-status" id="confirm-status"></span>
                             </div>
+                            <div class="field-error" id="confirm-error">Passwords do not match</div>
                         </div>
                     </div>
-                    <button type="submit" class="auth-btn">
+                    <button type="submit" class="auth-btn" id="register-btn">
                         <i class="fa-solid fa-user-plus"></i> Create Account
                     </button>
+                    <div class="auth-loading" id="register-loading" style="display: none;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Creating account...
+                    </div>
                 </form>
                 <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
             </div>
@@ -109,7 +127,7 @@
     <script>
         function togglePw(id, btn) {
             const input = document.getElementById(id);
-            const icon  = btn.querySelector('i');
+            const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.className = 'fa-regular fa-eye-slash';
@@ -118,6 +136,187 @@
                 icon.className = 'fa-regular fa-eye';
             }
         }
+
+        let usernameTimeout, emailTimeout;
+
+        // Username real-time validation
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value.trim().toLowerCase();
+            const status = document.getElementById('username-status');
+            const wrap = document.getElementById('username-wrap');
+            const error = document.getElementById('username-error');
+            
+            status.innerHTML = '';
+            wrap.classList.remove('success', 'error');
+            error.style.display = 'none';
+            
+            if (username.length < 3) {
+                if (username.length > 0) {
+                    status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    status.className = 'input-status input-pending';
+                }
+                return;
+            }
+            
+            clearTimeout(usernameTimeout);
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            status.className = 'input-status input-pending';
+            
+            usernameTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/check-username?username=${encodeURIComponent(username)}`);
+                    const data = await res.json();
+                    
+                    if (data.available) {
+                        status.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        status.className = 'input-status input-valid';
+                        wrap.classList.add('success');
+                    } else {
+                        status.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                        status.className = 'input-status input-invalid';
+                        wrap.classList.add('error');
+                        error.textContent = data.message;
+                        error.style.display = 'block';
+                    }
+                } catch {}
+            }, 300);
+        });
+
+        // Email real-time validation
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value.trim().toLowerCase();
+            const status = document.getElementById('email-status');
+            const wrap = document.getElementById('email-wrap');
+            const error = document.getElementById('email-error');
+            
+            status.innerHTML = '';
+            wrap.classList.remove('success', 'error');
+            error.style.display = 'none';
+            
+            if (!email.includes('@') && email.length > 0) return;
+            if (!email.includes('@') || !email.includes('.')) {
+                if (email.length > 0) {
+                    status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    status.className = 'input-status input-pending';
+                }
+                return;
+            }
+            
+            clearTimeout(emailTimeout);
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            status.className = 'input-status input-pending';
+            
+            emailTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/check-email?email=${encodeURIComponent(email)}`);
+                    const data = await res.json();
+                    
+                    if (data.available) {
+                        status.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        status.className = 'input-status input-valid';
+                        wrap.classList.add('success');
+                    } else {
+                        status.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                        status.className = 'input-status input-invalid';
+                        wrap.classList.add('error');
+                        error.textContent = data.message;
+                        error.style.display = 'block';
+                    }
+                } catch {}
+            }, 500);
+        });
+
+        // Password confirmation validation
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirm = this.value;
+            const status = document.getElementById('confirm-status');
+            const wrap = document.getElementById('confirm-wrap');
+            const error = document.getElementById('confirm-error');
+            
+            if (!confirm) {
+                status.innerHTML = '';
+                wrap.classList.remove('success', 'error');
+                error.style.display = 'none';
+                return;
+            }
+            
+            if (confirm === password && password.length >= 6) {
+                status.innerHTML = '<i class="fa-solid fa-check"></i>';
+                status.className = 'input-status input-valid';
+                wrap.classList.add('success');
+                wrap.classList.remove('error');
+                error.style.display = 'none';
+            } else {
+                status.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                status.className = 'input-status input-invalid';
+                wrap.classList.add('error');
+                wrap.classList.remove('success');
+                error.style.display = 'block';
+            }
+        });
+
+        // Form submission
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('register-error');
+            const successDiv = document.getElementById('register-success');
+            const btn = document.getElementById('register-btn');
+            const loading = document.getElementById('register-loading');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.style.display = 'none';
+            loading.style.display = 'block';
+            
+            const data = {
+                full_name: document.getElementById('full_name').value.trim(),
+                username: document.getElementById('username').value.trim().toLowerCase(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                title: document.getElementById('title').value.trim(),
+                location: document.getElementById('location').value.trim(),
+                password: document.getElementById('password').value,
+                confirm_password: document.getElementById('confirm_password').value
+            };
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('reg-success-message').textContent = result.message;
+                    successDiv.style.display = 'flex';
+                    setTimeout(() => { window.location.href = '/'; }, 500);
+                } else {
+                    document.getElementById('reg-error-message').textContent = result.message;
+                    errorDiv.style.display = 'flex';
+                    btn.disabled = false;
+                    btn.style.display = 'flex';
+                    loading.style.display = 'none';
+                }
+            } catch (err) {
+                document.getElementById('reg-error-message').textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'flex';
+                btn.disabled = false;
+                btn.style.display = 'flex';
+                loading.style.display = 'none';
+            }
+        });
+
+        // Check if already logged in
+        (async function checkAuth() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) window.location.href = '/';
+            } catch {}
+        })();
     </script>
 </body>
 </html>

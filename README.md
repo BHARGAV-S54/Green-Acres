@@ -149,10 +149,9 @@ A demo account is seeded in `schema.sql`:
 | Username | demo_farmer |
 | Password | farmer123 |
 
-**Note:** The application also works without a database connection using fallback demo data.
-
 ## Routes Overview
 
+### Page Routes
 | Route | Description |
 |-------|-------------|
 | `/` | Home — Community feed (login required) |
@@ -161,6 +160,16 @@ A demo account is seeded in `schema.sql`:
 | `/logout` | Clear session and redirect |
 | `/network` | Connections list and chat |
 | `/market` | Marketplace with listings |
+
+### API Routes (Real-time Authentication)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/me` | GET | Get current authenticated user |
+| `/api/login` | POST | Login with JSON response |
+| `/api/register` | POST | Register with JSON response |
+| `/api/logout` | POST | Logout via API |
+| `/api/check-username` | GET | Check username availability |
+| `/api/check-email` | GET | Check email availability |
 
 ## Database Schema
 
@@ -179,6 +188,8 @@ A demo account is seeded in `schema.sql`:
 - JWT tokens stored in HTTP-only cookies
 - Token revocation on logout
 - SQL injection protection via parameterized queries
+- Real-time validation for username/email availability
+- Protected API endpoints with session verification
 
 ## License
 

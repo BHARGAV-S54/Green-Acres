@@ -1010,6 +1010,33 @@ a.logo { text-decoration: none; }
     .market-hero { flex-direction: column; gap: 16px; text-align: center; }
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 }
-. r e m o v i n g  
-   o p a c i t y :   0 ;   t r a n s f o r m :   t r a n s l a t e X ( - 2 0 p x ) ;   t r a n s i t i o n :   a l l   0 . 3 s   e a s e ;    
- 
+
+.emoji-picker {
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 10px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    z-index: 100;
+}
+.emoji-item {
+    cursor: pointer;
+    font-size: 20px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    text-align: center;
+}
+.emoji-item:hover { background: var(--bg-color); }
+
+.removing {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+}

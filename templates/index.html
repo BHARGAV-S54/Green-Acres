@@ -40,6 +40,15 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="card stat-card" style="margin-top:20px; text-align:center; padding:20px;">
+                <div style="background:var(--primary-green); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">
+                    <i class="fa-solid fa-users" style="font-size:18px;"></i>
+                </div>
+                <h3 style="font-size:24px; font-weight:800; color:var(--primary-green);">{{ total_users }}</h3>
+                <p style="font-size:13px; font-weight:600; color:var(--text-muted); margin-top:2px;">Active Farmers</p>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:5px; line-height:1.4;">Growing the GreenAcres community together! 🌾</p>
+            </div>
         </aside>
 
         <!-- Main Feed -->
@@ -47,22 +56,25 @@
             <div class="card create-post-box">
                 <div class="create-post-top">
                     <img src="{{ user.avatar_url }}" alt="User Avatar" class="post-avatar">
-                    <input type="text" class="post-input" id="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
+                    <input type="text" class="post-input" id="post-input" placeholder="Share a farming update, ask for advice, or post a yield..." autocomplete="off">
                 </div>
-                <!-- Image Preview Area -->
+                <div id="post-error-msg" style="display:none; color:#ef4444; font-size:12px; padding:0 20px 10px; margin-top:-5px;">Post content cannot be empty.</div>
+                <!-- Media Preview Area -->
                 <div id="image-preview-container" style="display:none; padding:10px 20px; position:relative;">
-                    <img id="image-preview" src="#" alt="Preview" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);">
-                    <button id="remove-preview" style="position:absolute; top:15px; right:25px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                    <div id="preview-wrapper">
+                        <!-- Content injected by JS -->
+                    </div>
+                    <button id="remove-preview" style="position:absolute; top:15px; right:25px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; z-index:10;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="create-post-actions">
-                    <button class="action-btn" id="gallery-btn"><i class="fa-regular fa-image text-blue"></i> Gallery</button>
-                    <input type="file" id="post-image-input" accept="image/*" style="display:none;">
+                    <button class="action-btn" id="gallery-btn"><i class="fa-solid fa-photo-film text-blue"></i> Media</button>
+                    <input type="file" id="post-image-input" accept="image/*,video/*,audio/*" style="display:none;">
                     <button class="post-btn" id="submit-post" style="margin-left:auto; background:var(--primary-green); color:white; border:none; padding:8px 24px; border-radius:20px; font-weight:600; cursor:pointer;">Post</button>
                 </div>
             </div>
             <div class="feed-divider"><span>COMMUNITY FEED</span></div>
             {% for post in posts %}
-            <div class="card post-card" data-post-id="{{ post.id }}">
+            <div class="card post-card" data-post-id="{{ post.id }}" data-author-id="{{ post.user_id }}">
                 <div class="post-header">
                     <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
                     <div class="post-meta">
@@ -75,7 +87,14 @@
                 <div class="post-content">
                     <p>{{ post.content }}</p>
                     {% if post.media_url %}
-                    <img src="{{ post.media_url }}" alt="Post image" style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                        {% set ext = post.media_url.split('.')[-1].lower() %}
+                        {% if ext in ['mp4', 'webm', 'ogg'] %}
+                            <video src="{{ post.media_url }}" controls style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;"></video>
+                        {% elif ext in ['mp3', 'wav', 'aac'] %}
+                            <audio src="{{ post.media_url }}" controls style="width:100%; margin-top:10px;"></audio>
+                        {% else %}
+                            <img src="{{ post.media_url }}" alt="Post image" style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                        {% endif %}
                     {% endif %}
                 </div>
                 <div class="post-stats">
@@ -138,11 +157,11 @@
     </main>
 
     <script>
+        const CURRENT_USER_ID = {{ user.id }};
         // Gallery logic
         const galleryBtn = document.getElementById('gallery-btn');
         const imageInput = document.getElementById('post-image-input');
         const previewContainer = document.getElementById('image-preview-container');
-        const previewImg = document.getElementById('image-preview');
         const removePreview = document.getElementById('remove-preview');
 
         galleryBtn.addEventListener('click', () => imageInput.click());
@@ -152,7 +171,19 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    previewImg.src = e.target.result;
+                    const wrap = document.getElementById('preview-wrapper');
+                    const type = file.type.split('/')[0];
+                    let html = '';
+                    
+                    if (type === 'image') {
+                        html = `<img src="${e.target.result}" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);">`;
+                    } else if (type === 'video') {
+                        html = `<video src="${e.target.result}" controls style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);"></video>`;
+                    } else if (type === 'audio') {
+                        html = `<audio src="${e.target.result}" controls style="width:100%;"></audio>`;
+                    }
+                    
+                    wrap.innerHTML = html;
                     previewContainer.style.display = 'block';
                 }
                 reader.readAsDataURL(file);
@@ -161,34 +192,73 @@
 
         removePreview.addEventListener('click', () => {
             imageInput.value = '';
+            document.getElementById('preview-wrapper').innerHTML = '';
             previewContainer.style.display = 'none';
+        });
+
+        // Enter key to post
+        document.getElementById('post-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('submit-post').click();
+            }
         });
 
         // Submit Post logic
         document.getElementById('submit-post').addEventListener('click', async function() {
             const content = document.getElementById('post-input').value.trim();
             const file = imageInput.files[0];
+            const errorMsg = document.getElementById('post-error-msg');
 
-            if (!content && !file) return;
+            if (!content && !file) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+            errorMsg.style.display = 'none';
 
             const formData = new FormData();
             formData.append('content', content);
             if (file) formData.append('image', file);
 
+            const originalText = this.textContent;
             this.disabled = true;
             this.textContent = 'Posting...';
 
             try {
-                const resp = await fetch('/api/post/create', { method: 'POST', body: formData });
+                console.log('[Post Create] Sending request...');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 sec timeout
+
+                const resp = await fetch('/api/post/create', { 
+                    method: 'POST', 
+                    body: formData,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    throw new Error(`Server error (${resp.status}): ${errorText}`);
+                }
+
+                const contentType = resp.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response. You might have been logged out.');
+                }
+
                 const data = await resp.json();
+                console.log('[Post Create] Success:', data);
 
                 if (data.status === 'success') {
-                    location.reload(); // Quickest way to show new post with all logic
+                    location.reload(); 
+                } else {
+                    alert('Error: ' + (data.message || 'Post failed'));
                 }
             } catch (err) {
-                console.error(err);
+                console.error('[Post Error]', err);
+                alert('Connection error or upload failed. ' + err.message);
                 this.disabled = false;
-                this.textContent = 'Post';
+                this.textContent = originalText;
             }
         });
 
@@ -271,13 +341,47 @@
             if (shareBtn) {
                 const shareData = {
                     title: 'GreenAcres Post',
-                    text: card.querySelector('.post-content p').textContent,
+                    text: card.querySelector('.post-content p') ? card.querySelector('.post-content p').textContent : '',
                     url: window.location.href
                 };
                 if (navigator.share) navigator.share(shareData);
                 else {
                     navigator.clipboard.writeText(window.location.href);
                     alert('Link copied to clipboard! 📋');
+                }
+                return;
+            }
+
+            // 5. POST OPTIONS
+            const optionsBtn = e.target.closest('.post-options');
+            if (optionsBtn) {
+                const authorId = card.dataset.authorId;
+                const isMe = authorId == CURRENT_USER_ID;
+                
+                if (isMe) {
+                    if (confirm('Delete this post permanently? 🛑')) {
+                        try {
+                            const resp = await fetch(`/api/post/delete/${postId}`, { method: 'POST' });
+                            const data = await resp.json();
+                            if (data.status === 'success') {
+                                card.classList.add('removing');
+                                setTimeout(() => card.remove(), 300);
+                            } else { alert('Error: ' + data.message); }
+                        } catch (err) { console.error(err); }
+                    }
+                } else {
+                    const reason = prompt('Report this post for misconduct? (Leave blank to cancel)');
+                    if (reason !== null) {
+                        try {
+                            const resp = await fetch(`/api/post/report/${postId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ reason: reason || 'Public report' })
+                            });
+                            const data = await resp.json();
+                            alert(data.message || 'Thank you for your report. 🌱');
+                        } catch (err) { console.error(err); }
+                    }
                 }
             }
         });

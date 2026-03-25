@@ -44,6 +44,7 @@
                 <div class="dropdown-header">
                     <p>{{ user.full_name }}</p>
                     <small>{{ user.email if user.email else user.username }}</small>
+                    <a href="#" style="color:#ef4444; font-size:10px; text-decoration:none; display:block; margin-top:5px;" onclick="deleteAccount(); return false;">Delete Account</a>
                 </div>
 
                 <a href="#" class="dropdown-item">
@@ -74,15 +75,27 @@
     document.addEventListener('click', function () {
         document.getElementById('profile-dropdown')?.classList.remove('open');
     });
-<<<<<<< HEAD
-</script>
-=======
-
     async function logout() {
         try {
             await fetch('/api/logout', { method: 'POST' });
         } catch {}
         window.location.href = '/login';
     }
+    async function deleteAccount() {
+        if (confirm("Are you sure you want to delete your account? This action is permanent and you will lose all connections. 🛑")) {
+            try {
+                const resp = await fetch('/api/account/delete', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    alert('Account deleted. We are sorry to see you go. 🌱');
+                    window.location.href = '/login';
+                } else {
+                    alert('Failed to delete account: ' + (data.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            }
+        }
+    }
 </script>
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00

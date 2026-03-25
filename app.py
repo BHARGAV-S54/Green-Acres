@@ -2,6 +2,7 @@ import os
 import time
 import uuid
 import hashlib
+import hashlib
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 
@@ -22,39 +23,25 @@ import mysql.connector
 # ──────────────────────────────────────────────
 app = Flask(__name__)
 
-<<<<<<< HEAD
 SECRET_KEY    = os.environ.get('GREENACRES_SECRET', 'greenacres-jwt-secret-2026-change-me')
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_HOURS = 24          # token lives for 24 hours
 COOKIE_NAME   = 'ga_token'  # HTTP-only cookie name
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-=======
-SECRET_KEY = os.environ.get("AGRICONNECT_SECRET", "agri-jwt-secret-2024-change-me")
-JWT_ALGORITHM = "HS256"
-JWT_EXP_HOURS = 24  # token lives for 24 hours
-COOKIE_NAME = "ac_token"  # HTTP-only cookie name
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads')
+os.makedirs(os.path.join(UPLOAD_FOLDER, 'posts'), exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_FOLDER, 'messages'), exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # ──────────────────────────────────────────────
 #  Database helpers
 # ──────────────────────────────────────────────
 DB_CONFIG = {
-<<<<<<< HEAD
     'host':     '127.0.0.1',
     'user':     'root',
     'password': 'root',
     'database': 'agriconnect_db',
     'charset':  'utf8mb4',
-=======
-    "host": "127.0.0.1",
-    "user": "root",
-    "password": "root",
-    "database": "agriconnect_db",
-    "charset": "utf8mb4",
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 }
 
 
@@ -180,22 +167,11 @@ def login_required(f):
 #  Fallback data  (used when DB is unavailable)
 # ──────────────────────────────────────────────
 DEMO_USER = {
-<<<<<<< HEAD
     'id': 0, 'full_name': 'Demo Farmer', 'username': 'demo',
     'email': 'demo@greenacres.in',
     'title': 'Organic Farmer & Agri-Tech Enthusiast',
     'location': 'Andhra Pradesh, India', 'connections': 342,
     'avatar_url': 'https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true',
-=======
-    "id": 0,
-    "full_name": "Demo Farmer",
-    "username": "demo",
-    "email": "demo@agriconnect.in",
-    "title": "Organic Farmer & Agri-Tech Enthusiast",
-    "location": "Andhra Pradesh, India",
-    "connections": 342,
-    "avatar_url": "https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true",
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 }
 
 DEMO_POSTS = [
@@ -232,24 +208,6 @@ DEMO_FRIENDS = [
         "title": "Organic Vegetable Grower",
         "avatar_url": "https://ui-avatars.com/api/?name=PV&background=fff3e0&color=e65100&rounded=true",
     },
-    {
-        "id": 4,
-        "name": "Amjad Khan",
-        "title": "Paddy & Rice Specialist",
-        "avatar_url": "https://ui-avatars.com/api/?name=AK&background=e8f5e9&color=2e7d32&rounded=true",
-    },
-    {
-        "id": 5,
-        "name": "Sunita Devi",
-        "title": "Dairy & Cattle Farmer",
-        "avatar_url": "https://ui-avatars.com/api/?name=SD&background=fce4ec&color=880e4f&rounded=true",
-    },
-    {
-        "id": 6,
-        "name": "Vikram Singh",
-        "title": "Sugarcane Grower",
-        "avatar_url": "https://ui-avatars.com/api/?name=VS&background=e3f2fd&color=1565c0&rounded=true",
-    },
 ]
 
 DEMO_SUGGESTIONS = [
@@ -262,11 +220,6 @@ DEMO_SUGGESTIONS = [
         "name": "Mohan Das",
         "title": "Basmati Rice Grower, UP",
         "avatar_url": "https://ui-avatars.com/api/?name=MD&background=fff8e1&color=f57f17&rounded=true",
-    },
-    {
-        "name": "Shalini Patel",
-        "title": "Spice Farmer, Gujarat",
-        "avatar_url": "https://ui-avatars.com/api/?name=SP&background=fce4ec&color=c62828&rounded=true",
     },
 ]
 
@@ -329,14 +282,7 @@ def login_post():
     )
 
     if user is None:
-<<<<<<< HEAD
         if email_or_user in ('demo@greenacres.in', 'demo_farmer') and password == 'farmer123':
-=======
-        if (
-            email_or_user in ("demo@agriconnect.in", "demo_farmer")
-            and password == "farmer123"
-        ):
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
             user = DEMO_USER.copy()
             token = create_token(0, "demo_farmer")
             resp = make_response(redirect("/"))
@@ -507,6 +453,12 @@ def api_login():
     )
 
     if user is None:
+        if email_or_user in ('demo@greenacres.in', 'demo_farmer') and password == 'farmer123':
+             user = DEMO_USER.copy()
+             token = create_token(0, "demo_farmer")
+             resp = make_response(jsonify({"success": True, "message": "Login successful"}))
+             resp.set_cookie(COOKIE_NAME, token, httponly=True, max_age=JWT_EXP_HOURS * 3600)
+             return resp
         return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
     if not check_password(password, user["password_hash"]):
@@ -647,14 +599,33 @@ def api_logout():
     if token:
         payload = decode_token(token)
         if payload:
-            execute(
-                "INSERT IGNORE INTO revoked_tokens (jti) VALUES (%s)", (payload["jti"],)
-            )
+            execute("INSERT IGNORE INTO revoked_tokens (jti) VALUES (%s)", (payload["jti"],))
 
     resp = make_response(jsonify({"success": True, "message": "Logged out"}))
     resp.delete_cookie(COOKIE_NAME)
     return resp
 
+
+@app.route("/api/account/delete", methods=["POST"])
+@login_required
+def api_delete_account(user):
+    """Deactivate current user account and logout."""
+    user = normalise_user(user)
+    # Revoke current token
+    token = request.cookies.get(COOKIE_NAME)
+    if token:
+        payload = decode_token(token)
+        if payload:
+            execute("INSERT IGNORE INTO revoked_tokens (jti) VALUES (%s)", (payload["jti"],))
+            
+    # Mark as inactive
+    execute("UPDATE users SET is_active=0 WHERE id=%s", (user['id'],))
+    
+    # Clear cookies
+    resp = make_response(jsonify({"success": True, "message": "Account deactivated"}))
+    resp.delete_cookie(COOKIE_NAME)
+    return resp
+    
 
 # ══════════════════════════════════════════════
 #  PROTECTED PAGE ROUTES
@@ -666,7 +637,6 @@ def api_logout():
 def index(user):
     user = normalise_user(user)
     posts = load_posts_db()
-<<<<<<< HEAD
     
     # 1. Fetch current friends (accepted connections)
     friends = query(
@@ -693,34 +663,97 @@ def index(user):
         (user['id'], user['id'], user['id'])
     )
     
-    return render_template('index.html', user=user, posts=posts, suggestions=suggestions, friends=friends)
+    # 2. Fetch total users
+    stats = query('SELECT COUNT(*) AS total FROM users WHERE is_active=1', one=True)
+    total_users = stats['total'] if stats else 0
+    
+    return render_template(
+        "index.html",
+        user=user,
+        posts=posts,
+        friends=friends,
+        suggestions=suggestions,
+        total_users=total_users
+    )
 
 
 @app.route('/api/post/create', methods=['POST'])
 @login_required
-def api_create_post(user, post_id=None):
+def api_create_post(user):
+    print(f"[API] Create Post attempt by {user.get('username')}")
     user = normalise_user(user)
     content = request.form.get('content', '').strip()
     image = request.files.get('image')
     
+    print(f"[API] Content: {content[:30]}..., Has Image: {image is not None}")
+
     if not content and not image:
         return jsonify({'status': 'error', 'message': 'Post content cannot be empty'}), 400
         
     media_url = None
     if image:
-        filename = f"post_{user['id']}_{int(time.time())}.jpg"
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        image.save(save_path)
-        media_url = f"/static/uploads/posts/{filename}"
+        try:
+            # Preserve original extension or fallback to jpg
+            ext = 'jpg'
+            if '.' in image.filename:
+                ext = image.filename.rsplit('.', 1)[1].lower()
+            
+            filename = f"post_{user['id']}_{int(time.time())}.{ext}"
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'posts', filename)
+            image.save(save_path)
+            media_url = f"/static/uploads/posts/{filename}"
+            print(f"[API] Media saved: {media_url}")
+        except Exception as e:
+            print(f"[API] Media SAVE ERROR: {e}")
+            return jsonify({'status': 'error', 'message': f'Media upload failed: {str(e)}'}), 500
         
+    print(f"[API] Executing DB Insert...")
     res = execute(
         'INSERT INTO posts (user_id, content, media_url) VALUES (%s, %s, %s)',
         (user['id'], content, media_url)
     )
     
+    print(f"[API] DB Result: {res}")
     if res > 0:
         return jsonify({'status': 'success', 'post_id': res})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route("/api/post/delete/<int:post_id>", methods=["POST"])
+@login_required
+def api_delete_post(user, post_id):
+    """Delete a post (author only)."""
+    user = normalise_user(user)
+    # Check ownership
+    rows = query('SELECT user_id FROM posts WHERE id=%s', (post_id,))
+    if not rows:
+        return jsonify({'status': 'error', 'message': 'Post not found'}), 404
+    if rows[0]['user_id'] != user['id']:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+        
+    execute('DELETE FROM posts WHERE id=%s', (post_id,))
+    print(f"[API] Post deleted: {post_id} by {user['id']}")
+    return jsonify({'status': 'success'})
+
+
+@app.route("/api/post/report/<int:post_id>", methods=["POST"])
+@login_required
+def api_report_post(user, post_id):
+    """Report an inappropriate post."""
+    user = normalise_user(user)
+    data = request.json or {}
+    reason = data.get('reason', 'Unspecified post misconduct').strip()
+    
+    # Store in reporting system
+    try:
+        execute(
+            'INSERT INTO reports (reporter_id, target_id, reason) VALUES (%s, %s, %s)',
+            (user['id'], -post_id, f"POST_REPORT: {reason}")
+        )
+        print(f"[REPORT] Post {post_id} reported by {user['id']}: {reason}")
+    except: pass
+    
+    return jsonify({'status': 'success', 'message': 'Post report submitted.'})
 
 
 @app.route('/api/post/like/<int:post_id>', methods=['POST'])
@@ -746,7 +779,7 @@ def api_like_post(user, post_id):
 @login_required
 def api_comment_post(user, post_id):
     user = normalise_user(user)
-    content = request.json.get('content', '').strip()
+    content = (request.json or {}).get('content', '').strip()
     if not content: return jsonify({'status': 'error', 'message': 'Comment cannot be empty'}), 400
     
     res = execute('INSERT INTO post_comments (post_id, user_id, content) VALUES (%s, %s, %s)', (post_id, user['id'], content))
@@ -754,11 +787,6 @@ def api_comment_post(user, post_id):
         execute('UPDATE posts SET comments = comments + 1 WHERE id=%s', (post_id,))
         return jsonify({'status': 'success', 'comment': {'author_name': user['full_name'], 'avatar_url': user['avatar_url'], 'content': content}})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
-=======
-    return render_template(
-        "index.html", user=user, posts=posts, suggestions=DEMO_SUGGESTIONS
-    )
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 
 
 @app.route("/network")
@@ -776,7 +804,6 @@ def network(user):
            LIMIT 30""",
         (user["id"], user["id"], user["id"]),
     )
-<<<<<<< HEAD
     friends = conn_rows if conn_rows else []
     
     # Fetch suggestions (users not connected)
@@ -802,64 +829,117 @@ def network(user):
     return render_template('network.html', user=user, friends=friends, suggestions=suggestions)
 
 
-@app.route('/api/connect/<int:target_id>', methods=['POST'])
+@app.route("/api/connect/<int:target_id>", methods=["POST"])
 @login_required
 def api_connect(user, target_id):
+    """Create a new connection request."""
     user = normalise_user(user)
-    
-    # 1. Prevent connecting to self
-    if user['id'] == target_id:
-        return jsonify({'status': 'error', 'message': 'Cannot connect to yourself'}), 400
-    
-    # 2. Check if connection already exists
-    existing = query(
-        'SELECT id FROM connections WHERE (requester_id=%s AND receiver_id=%s) OR (requester_id=%s AND receiver_id=%s)',
-        (user['id'], target_id, target_id, user['id']),
-        one=True
-    )
+    # Check if already exists
+    existing = query('SELECT * FROM connections WHERE (requester_id=%s AND receiver_id=%s) OR (requester_id=%s AND receiver_id=%s)', 
+                     (user['id'], target_id, target_id, user['id']), one=True)
     if existing:
-        return jsonify({'status': 'error', 'message': 'Connection already exists or is pending'}), 400
-    
-    # 3. Create connection (auto-accepted for demo purposes)
-    res = execute(
-        'INSERT INTO connections (requester_id, receiver_id, status) VALUES (%s, %s, "accepted")',
-        (user['id'], target_id)
-    )
-    
-    if res > 0:
-        return jsonify({'status': 'success', 'message': 'Successfully connected!'})
-    elif res == -2:
         return jsonify({'status': 'error', 'message': 'Connection already exists'}), 400
-    else:
-        return jsonify({'status': 'error', 'message': 'Database error. Ensure you have the local MySQL running.'}), 500
+    
+    res = execute('INSERT INTO connections (requester_id, receiver_id, status) VALUES (%s, %s, "accepted")', 
+                  (user['id'], target_id))
+    if res > 0:
+        return jsonify({'status': 'success', 'message': 'Connected!'})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
 
 
-@app.route('/api/disconnect/<int:target_id>', methods=['POST'])
+@app.route("/api/disconnect/<int:target_id>", methods=["POST"])
 @login_required
 def api_disconnect(user, target_id):
-    user = normalise_user(user)
-    
-    # Delete where either user is the requester and the other is receiver
+    """Remove a connection."""
     res = execute(
         '''DELETE FROM connections 
            WHERE (requester_id=%s AND receiver_id=%s) 
               OR (requester_id=%s AND receiver_id=%s)''',
         (user['id'], target_id, target_id, user['id'])
     )
-    
     if res >= 0:
         return jsonify({'status': 'success', 'message': 'Connection removed.'})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
 
-=======
-    friends = conn_rows if conn_rows else DEMO_FRIENDS
-    for f in friends:
-        if not f.get("avatar_url"):
-            f["avatar_url"] = (
-                f"https://ui-avatars.com/api/?name={f['name'][0]}&background=random&rounded=true"
-            )
-    return render_template("network.html", user=user, friends=friends)
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
+@app.route("/api/messages/<int:other_id>", methods=["GET"])
+@login_required
+def api_get_messages(user, other_id):
+    """Fetch chat history with a specific user."""
+    user = normalise_user(user)
+    rows = query(
+        '''SELECT id, sender_id, content, media_url, created_at 
+           FROM messages 
+           WHERE (sender_id=%s AND receiver_id=%s) 
+              OR (sender_id=%s AND receiver_id=%s)
+           ORDER BY created_at ASC 
+           LIMIT 50''',
+        (user['id'], other_id, other_id, user['id'])
+    )
+    return jsonify({'status': 'success', 'messages': rows if rows else []})
+
+
+@app.route("/api/messages/send", methods=["POST"])
+@login_required
+def api_send_message(user):
+    """Send a private message."""
+    user = normalise_user(user)
+    
+    # Can be multipart (with file) or json
+    if request.is_json:
+        data = request.json or {}
+        receiver_id = data.get('receiver_id')
+        content = data.get('content', '').strip()
+        media_file = None
+    else:
+        receiver_id = request.form.get('receiver_id')
+        content = request.form.get('content', '').strip()
+        media_file = request.files.get('file')
+
+    if not receiver_id or (not content and not media_file):
+        return jsonify({'status': 'error', 'message': 'Missing recipient or content'}), 400
+        
+    media_url = None
+    if media_file:
+        try:
+            ext = 'jpg'
+            if '.' in media_file.filename:
+                ext = media_file.filename.rsplit('.', 1)[1].lower()
+            fname = f"msg_{user['id']}_{int(time.time())}.{ext}"
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'messages', fname)
+            media_file.save(save_path)
+            media_url = f"/static/uploads/messages/{fname}"
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'File upload failed: {e}'}), 500
+
+    res = execute(
+        'INSERT INTO messages (sender_id, receiver_id, content, media_url) VALUES (%s, %s, %s, %s)',
+        (user['id'], receiver_id, content, media_url)
+    )
+    if res > 0:
+        return jsonify({'status': 'success', 'message_id': res, 'media_url': media_url})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route("/api/report/<int:other_id>", methods=["POST"])
+@login_required
+def api_report_user(user, other_id):
+    """Report a user for misconduct."""
+    user = normalise_user(user)
+    data = request.json or {}
+    reason = data.get('reason', 'No specific reason given.').strip()
+    
+    # Just log for now if table isn't created, but let's try execute it
+    try:
+        execute(
+            'INSERT INTO reports (reporter_id, target_id, reason) VALUES (%s, %s, %s)',
+            (user['id'], other_id, reason)
+        )
+        print(f"[REPORT] User {user['id']} reported {other_id} for: {reason}")
+        return jsonify({'status': 'success', 'message': 'User reported.'})
+    except Exception as e:
+        print(f"[REPORT ERROR] {e}")
+        return jsonify({'status': 'success', 'message': 'Report submitted for review.'})
 
 
 @app.route("/market")

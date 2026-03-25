@@ -107,9 +107,7 @@
                     {% endif %}
                 </div>
                 <div class="chat-actions">
-                    <button class="chat-icon-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
-                    <button class="chat-icon-btn" title="Video call"><i class="fa-solid fa-video"></i></button>
-                    <button class="chat-icon-btn" title="Info"><i class="fa-solid fa-circle-info"></i></button>
+                    <button class="chat-icon-btn" id="chat-info-btn" title="Report/Info"><i class="fa-solid fa-circle-info"></i></button>
                 </div>
             </div>
             <div class="messages-area" id="messages-area">
@@ -129,15 +127,25 @@
                 {% endif %}
             </div>
             <div class="chat-input-area">
-                <button class="chat-icon-btn"><i class="fa-solid fa-paperclip"></i></button>
-                <button class="chat-icon-btn"><i class="fa-regular fa-image"></i></button>
+                <button class="chat-icon-btn" id="chat-emoji-btn" title="Emojis"><i class="fa-regular fa-face-smile"></i></button>
+                <div id="emoji-picker" class="emoji-picker" style="display:none;">
+                    <span class="emoji-item">🌾</span> <span class="emoji-item">🚜</span> <span class="emoji-item">🌽</span>
+                    <span class="emoji-item">🌱</span> <span class="emoji-item">💧</span> <span class="emoji-item">🐂</span>
+                    <span class="emoji-item">🥛</span> <span class="emoji-item">🐔</span> <span class="emoji-item">🍏</span>
+                    <span class="emoji-item">🌿</span> <span class="emoji-item">🚜</span> <span class="emoji-item">🌻</span>
+                    <span class="emoji-item">🌦️</span> <span class="emoji-item">👍</span> <span class="emoji-item">🤝</span>
+                </div>
+                <button class="chat-icon-btn" id="chat-media-btn" title="Send image/media"><i class="fa-regular fa-image"></i></button>
+                <input type="file" id="chat-file-input" style="display:none;" accept="image/*,video/*,audio/*">
                 <input type="text" class="chat-input" id="chat-input" placeholder="Write a message..." aria-label="Message input">
                 <button class="send-btn" id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
 
-                <div class="profile-panel-inner" id="profile-panel-inner">
-                    <img src="{{ friends[0].avatar_url if friends else '' }}" alt="" class="pp-avatar" id="pp-avatar" style="{{ 'display:block' if friends else 'display:none' }}">
+        <!-- Friend Profile Panel -->
+        <aside class="profile-panel" id="profile-panel" data-active-friend-id="{{ friends[0].id if friends else '' }}">
+            <div class="profile-panel-inner" id="profile-panel-inner">
+                <img src="{{ friends[0].avatar_url if friends else '' }}" alt="" class="pp-avatar" id="pp-avatar" style="{{ 'display:block' if friends else 'display:none' }}">
                     <div id="pp-empty-icon" style="{{ 'display:none' if friends else 'display:flex' }}; width:80px; height:80px; border-radius:50%; background:#f1f5f9; align-items:center; justify-content:center; margin-bottom:15px;">
                         <i class="fa-solid fa-user" style="font-size:32px; color:#cbd5e1;"></i>
                     </div>
@@ -161,6 +169,10 @@
         </aside>
     </main>
 
+    <script>
+        // Global User Context
+        const CURRENT_USER_ID = {{ user.id }};
+    </script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
         // Tab Switching
@@ -244,12 +256,11 @@
             // Handle Selection
             if (!e.target.closest('button')) {
                 const { friendId, name, avatar, title } = item.dataset;
-                console.log(`[Friend Selected] ID: ${friendId}, Name: ${name}, Title: ${title}`); // DEBUG
                 
                 document.querySelectorAll('.friend-item').forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
 
-                // Fallback for missing name/avatar in UI panel
+                // Update UI elements
                 const finalName = name || 'Anonymous User';
                 const finalAvatar = avatar || `https://ui-avatars.com/api/?name=${finalName[0]}&background=random`;
                 
@@ -263,16 +274,58 @@
                 document.getElementById('pp-name').textContent = finalName;
                 document.getElementById('pp-title').textContent = title || 'Farm Professional';
                 document.getElementById('profile-panel').dataset.activeFriendId = friendId;
-                
-                document.getElementById('messages-area').innerHTML = `
-                    <div class="msg-date-sep"><span>Today</span></div>
-                    <div class="msg-row received">
-                        <img src="${avatar}" alt="" class="msg-avatar">
-                        <div class="msg-bubble received-bubble">Hey! How are things going on the farm?</div>
-                    </div>
-                `;
+
+                // Load Chat History
+                loadChatHistory(friendId, finalAvatar);
             }
         });
+
+        async function loadChatHistory(otherId, avatar) {
+            const area = document.getElementById('messages-area');
+            area.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Loading history...</div>';
+            
+            try {
+                const resp = await fetch(`/api/messages/${otherId}`);
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    area.innerHTML = '';
+                    if (data.messages.length === 0) {
+                        area.innerHTML = '<div class="msg-date-sep"><span>Start of Conversation</span></div>';
+                    } else {
+                        area.innerHTML = '<div class="msg-date-sep"><span>Chat History</span></div>';
+                        data.messages.forEach(m => {
+                            const isMe = m.sender_id == CURRENT_USER_ID;
+                            let mediaHtml = '';
+                            if (m.media_url) {
+                                const parts = m.media_url.split('.');
+                                const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+                                if (['mp4','webm','ogg'].includes(ext)) {
+                                    mediaHtml = `<video src="${m.media_url}" controls style="max-width:200px; border-radius:10px; margin-bottom:5px;"></video>`;
+                                } else if (['mp3','wav','aac'].includes(ext)) {
+                                    mediaHtml = `<audio src="${m.media_url}" controls style="width:180px; margin-bottom:5px;"></audio>`;
+                                } else {
+                                    mediaHtml = `<img src="${m.media_url}" style="max-width:200px; border-radius:10px; margin-bottom:5px;" onclick="window.open(this.src)">`;
+                                }
+                            }
+
+                            const html = `
+                                <div class="msg-row ${isMe ? 'sent' : 'received'}">
+                                    ${!isMe ? `<img src="${avatar}" alt="" class="msg-avatar">` : ''}
+                                    <div class="msg-bubble ${isMe ? 'sent-bubble' : 'received-bubble'}">
+                                        ${mediaHtml}
+                                        ${m.content ? `<div>${m.content}</div>` : ''}
+                                    </div>
+                                </div>`;
+                            area.insertAdjacentHTML('beforeend', html);
+                        });
+                    }
+                    area.scrollTop = area.scrollHeight;
+                }
+            } catch (err) {
+                console.error('[Chat Load Error]', err);
+                area.innerHTML = '<div style="text-align:center; color:red; padding:20px;">Failed to load messages.</div>';
+            }
+        }
 
         // Search logic
         document.getElementById('friends-search-input').addEventListener('input', function () {
@@ -316,12 +369,145 @@
             }
         }
 
-        // Profile Panel Unfollow logic
-        document.querySelector('.profile-unfollow-btn')?.addEventListener('click', function() {
-            const panel = document.getElementById('profile-panel');
-            const targetId = panel.dataset.activeFriendId;
-            const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
-            handleUnfollow(targetId, listItem, this);
+        // Profile Panel logic
+        document.getElementById('profile-panel').addEventListener('click', function(e) {
+            const unfollowBtn = e.target.closest('.profile-unfollow-btn');
+            const primaryBtn = e.target.closest('.primary-btn');
+            
+            const targetId = this.dataset.activeFriendId;
+            const name = document.getElementById('pp-name').textContent;
+
+            if (primaryBtn) {
+                alert(`Opening full profile for ${name} (Feature coming soon!)`);
+                return;
+            }
+
+        if (unfollowBtn) {
+                console.log(`[Panel Unfollow Click] Target ID: ${targetId}, Name: ${name}`);
+                const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
+                handleUnfollow(targetId, listItem, unfollowBtn);
+            }
+        });
+
+        // Chat Send logic
+        async function sendMessage(file = null) {
+            const input = document.getElementById('chat-input');
+            const btn = document.getElementById('send-btn');
+            const targetId = document.getElementById('profile-panel').dataset.activeFriendId;
+            const content = input.value.trim();
+
+            if (!targetId || (!content && !file)) return;
+
+            btn.disabled = true;
+            try {
+                let body, headers = {};
+                if (file) {
+                    body = new FormData();
+                    body.append('receiver_id', targetId);
+                    body.append('content', content);
+                    body.append('file', file);
+                } else {
+                    headers = { 'Content-Type': 'application/json' };
+                    body = JSON.stringify({ receiver_id: targetId, content: content });
+                }
+
+                const resp = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: headers,
+                    body: body
+                });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    const area = document.getElementById('messages-area');
+                    
+                    let mediaHtml = '';
+                    if (data.media_url) {
+                        const parts = data.media_url.split('.');
+                        const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+                        if (['mp4','webm','ogg'].includes(ext)) {
+                            mediaHtml = `<video src="${data.media_url}" controls style="max-width:200px; border-radius:10px; margin-bottom:5px;"></video>`;
+                        } else if (['mp3','wav','aac'].includes(ext)) {
+                            mediaHtml = `<audio src="${data.media_url}" controls style="width:180px; margin-bottom:5px;"></audio>`;
+                        } else {
+                            mediaHtml = `<img src="${data.media_url}" style="max-width:200px; border-radius:10px; margin-bottom:5px;">`;
+                        }
+                    }
+
+                    const html = `
+                        <div class="msg-row sent">
+                            <div class="msg-bubble sent-bubble">
+                                ${mediaHtml}
+                                ${content ? `<div>${content}</div>` : ''}
+                            </div>
+                        </div>`;
+                    area.insertAdjacentHTML('beforeend', html);
+                    input.value = '';
+                    area.scrollTop = area.scrollHeight;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error('[Chat Send Error]', err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('send-btn').addEventListener('click', () => sendMessage());
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Media attachment logic
+        const chatFileInput = document.getElementById('chat-file-input');
+        document.getElementById('chat-media-btn').addEventListener('click', () => chatFileInput.click());
+        
+        chatFileInput.addEventListener('change', function() {
+            if (this.files[0]) {
+                sendMessage(this.files[0]);
+                this.value = ''; // Reset
+            }
+        });
+
+        // Emoji Picker logic
+        const emojiBtn = document.getElementById('chat-emoji-btn');
+        const emojiPicker = document.getElementById('emoji-picker');
+        const chatInput = document.getElementById('chat-input');
+
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'grid' : 'none';
+        });
+
+        document.querySelectorAll('.emoji-item').forEach(item => {
+            item.addEventListener('click', () => {
+                chatInput.value += item.textContent;
+                chatInput.focus();
+                emojiPicker.style.display = 'none';
+            });
+        });
+
+        // Report logic
+        document.getElementById('chat-info-btn').addEventListener('click', async () => {
+            const targetId = document.getElementById('profile-panel').dataset.activeFriendId;
+            const name = document.getElementById('chat-name').textContent;
+            if (!targetId || targetId == CURRENT_USER_ID) return;
+
+            if (confirm(`Do you want to report ${name} for misconduct?`)) {
+                const reason = prompt("Optional: Reason for reporting?");
+                try {
+                    const resp = await fetch(`/api/report/${targetId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reason: reason || 'Not specified' })
+                    });
+                    const data = await resp.json();
+                    alert(data.message || 'Report submitted.');
+                } catch (err) {
+                    console.error('[Report Error]', err);
+                    alert('Submission failed.');
+                }
+            }
         });
     </script>
 </body>

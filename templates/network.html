@@ -136,22 +136,16 @@
             </div>
         </div>
 
-        <!-- Friend Profile Panel -->
-        <aside class="profile-panel" id="profile-panel">
                 <div class="profile-panel-inner" id="profile-panel-inner">
-                    {% if friends %}
-                    <img src="{{ friends[0].avatar_url }}" alt="" class="pp-avatar" id="pp-avatar">
-                    <h3 class="pp-name" id="pp-name">{{ friends[0].name }}</h3>
-                    <p class="pp-title" id="pp-title">{{ friends[0].title }}</p>
-                    {% else %}
-                    <div style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+                    <img src="{{ friends[0].avatar_url if friends else '' }}" alt="" class="pp-avatar" id="pp-avatar" style="{{ 'display:block' if friends else 'display:none' }}">
+                    <div id="pp-empty-icon" style="{{ 'display:none' if friends else 'display:flex' }}; width:80px; height:80px; border-radius:50%; background:#f1f5f9; align-items:center; justify-content:center; margin-bottom:15px;">
                         <i class="fa-solid fa-user" style="font-size:32px; color:#cbd5e1;"></i>
                     </div>
-                    <h3 class="pp-name" id="pp-name">No Contact</h3>
-                    <p class="pp-title" id="pp-title">Select a connection</p>
-                    {% endif %}
+                    
+                    <h3 class="pp-name" id="pp-name">{{ friends[0].name if friends else 'No Selection' }}</h3>
+                    <p class="pp-title" id="pp-title">{{ friends[0].title if friends else 'Select a contact' }}</p>
                 <p class="pp-loc"><i class="fa-solid fa-location-dot"></i> Andhra Pradesh, India</p>
-                <div class="pp-actions">
+                <div class="pp-actions" id="pp-actions" style="{{ 'display:flex' if friends else 'display:none' }}">
                     <button class="pp-btn primary-btn">View Full Profile</button>
                     <button class="pp-btn outline-btn profile-unfollow-btn">Unfollow</button>
                 </div>
@@ -242,32 +236,8 @@
             const removeBtn = e.target.closest('.remove-conn-btn');
             if (removeBtn) {
                 const targetId = item.dataset.friendId;
-                if (!confirm('Are you sure you want to remove this connection?')) return;
-
-                removeBtn.disabled = true;
-                removeBtn.style.opacity = '0.5';
-                
-                try {
-                    const resp = await fetch(`/api/disconnect/${targetId}`, { method: 'POST' });
-                    const data = await resp.json();
-                    
-                    if (data.status === 'success') {
-                        item.classList.add('removing');
-                        setTimeout(() => {
-                            item.remove();
-                            // If we removed the active item, clear chat
-                            if (item.classList.contains('active')) {
-                                document.getElementById('messages-area').innerHTML = '<p style="text-align:center; padding:40px; color:var(--icon-gray);">Select a connection to start chatting</p>';
-                            }
-                        }, 300);
-                    } else {
-                        alert('Error: ' + (data.message || 'Action failed'));
-                    }
-                } catch (err) { 
-                    console.error('[Disconnect Error]', err);
-                    alert('Request failed. Ensure the server is running.');
-                }
-                finally { removeBtn.disabled = false; removeBtn.style.opacity = '1'; }
+                console.log(`[Sidebar Unfollow] Target: ${targetId}`);
+                handleUnfollow(targetId, item, removeBtn);
                 return;
             }
 
@@ -286,6 +256,10 @@
                 document.getElementById('chat-avatar').src = finalAvatar;
                 document.getElementById('chat-name').textContent = finalName;
                 document.getElementById('pp-avatar').src = finalAvatar;
+                document.getElementById('pp-avatar').style.display = 'block';
+                document.getElementById('pp-empty-icon').style.display = 'none';
+                document.getElementById('pp-actions').style.display = 'flex';
+                
                 document.getElementById('pp-name').textContent = finalName;
                 document.getElementById('pp-title').textContent = title || 'Farm Professional';
                 document.getElementById('profile-panel').dataset.activeFriendId = friendId;
@@ -309,30 +283,45 @@
             });
         });
 
-        // Profile Panel Unfollow logic
-        document.querySelector('.profile-unfollow-btn')?.addEventListener('click', async function() {
-            const panel = document.getElementById('profile-panel');
-            const targetId = panel.dataset.activeFriendId;
+        async function handleUnfollow(targetId, element, button) {
             if (!targetId || !confirm('Are you sure you want to remove this connection?')) return;
 
-            const btn = this;
-            btn.disabled = true;
-            btn.textContent = '...';
+            button.disabled = true;
+            button.style.opacity = '0.5';
 
             try {
+                console.log(`[Unfollow Action] ID: ${targetId}`);
                 const resp = await fetch(`/api/disconnect/${targetId}`, { method: 'POST' });
                 const data = await resp.json();
                 if (data.status === 'success') {
-                    // Find the item in the sidebar list and remove it
-                    const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
-                    if (listItem) listItem.remove();
-                    // Reload or clear panel
-                    window.location.reload(); 
+                    // Update UI
+                    if(element) {
+                        element.classList.add('removing');
+                        setTimeout(() => {
+                            element.remove();
+                            if (element.classList.contains('active')) window.location.reload();
+                        }, 300);
+                    } else {
+                        window.location.reload(); 
+                    }
                 } else {
-                    alert(data.message || 'Action failed');
+                    alert('Error: ' + (data.message || 'Action failed'));
                 }
-            } catch (err) { console.error(err); }
-            finally { btn.disabled = false; btn.textContent = 'Unfollow'; }
+            } catch (err) { 
+                console.error('[Connection Error]', err);
+                alert('Connection to server lost.');
+            } finally {
+                button.disabled = false;
+                button.style.opacity = '1';
+            }
+        }
+
+        // Profile Panel Unfollow logic
+        document.querySelector('.profile-unfollow-btn')?.addEventListener('click', function() {
+            const panel = document.getElementById('profile-panel');
+            const targetId = panel.dataset.activeFriendId;
+            const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
+            handleUnfollow(targetId, listItem, this);
         });
     </script>
 </body>

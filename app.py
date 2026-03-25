@@ -129,10 +129,13 @@ def check_password(plain: str, hashed: str) -> bool:
 # ──────────────────────────────────────────────
 #  JWT helpers
 # ──────────────────────────────────────────────
-def create_token(user_id: int, username: str) -> str:
+def create_token(user_id: int, username: str, name: str = '', email: str = '', avatar: str = '') -> str:
     payload = {
         'sub':  user_id,
         'user': username,
+        'name': name,
+        'email': email,
+        'avatar': avatar,
         'jti':  str(uuid.uuid4()),
         'iat':  datetime.now(timezone.utc),
         'exp':  datetime.now(timezone.utc) + timedelta(hours=JWT_EXP_HOURS),
@@ -162,8 +165,23 @@ def get_current_user():
     )
     if is_revoked:
         return None
+
+    # Try to get user from database
     user = query('SELECT * FROM users WHERE id=%s AND is_active=1',
                  (payload['sub'],), one=True)
+
+    # FALLBACK: If no DB or user_id is 0 (demo), return from token payload
+    if not user and payload.get('sub') == 0:
+        return {
+            'id': 0,
+            'username': payload.get('user', 'demo'),
+            'full_name': payload.get('name', 'Demo Farmer'),
+            'email': payload.get('email', ''),
+            'avatar_url': payload.get('avatar', ''),
+            'title': 'AgriConnect Farmer',
+            'location': 'India',
+            'connections': 0,
+        }
     return user
 
 # ──────────────────────────────────────────────
@@ -404,6 +422,21 @@ def find_or_create_oauth_user(provider, oauth_id, email, full_name, avatar_url=N
 
     if result > 0:
         return query('SELECT * FROM users WHERE id=%s', (result,), one=True)
+
+    # FALLBACK: If database not available, return a demo user dict
+    if result < 0:
+        return {
+            'id': 0,
+            'full_name': full_name,
+            'username': username,
+            'email': email,
+            'oauth_provider': provider,
+            'oauth_id': oauth_id,
+            'avatar_url': default_avatar,
+            'title': 'AgriConnect Farmer',
+            'location': 'India',
+            'connections': 0,
+        }
     return None
 
 
@@ -434,11 +467,17 @@ def auth_google_callback():
         if not user:
             return render_template('login.html', error='Failed to create account. Please try again.')
 
-        # Update last login
+        # Update last login (ignore if DB not available)
         execute('UPDATE users SET last_login=%s WHERE id=%s', (datetime.now(), user['id']))
 
-        # Issue JWT and redirect
-        jwt_token = create_token(user['id'], user['username'])
+        # Issue JWT with user info and redirect
+        jwt_token = create_token(
+            user['id'],
+            user.get('username', email.split('@')[0]),
+            user.get('full_name', name),
+            user.get('email', email),
+            user.get('avatar_url', picture or '')
+        )
         resp = make_response(redirect('/'))
         resp.set_cookie(COOKIE_NAME, jwt_token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite='Lax')
         return resp
@@ -617,4 +656,4 @@ def market(user):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='localhost', port=5000)

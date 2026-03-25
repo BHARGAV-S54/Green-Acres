@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Background Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/backgrounds.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f5f5; }
+
+        .gallery-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .gallery-header h1 {
+            font-size: 48px;
+            font-weight: 900;
+            color: #1b873f;
+            margin-bottom: 16px;
+        }
+
+        .gallery-header p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .gallery-header .subtitle {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .backgrounds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .bg-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .bg-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        }
+
+        .bg-preview {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-card-content {
+            padding: 20px 24px;
+        }
+
+        .bg-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .bg-card p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .bg-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .feature-tag {
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .feature-tag.highlight {
+            background: #e8f5e9;
+            color: #1b873f;
+        }
+
+        .bg-card button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1b873f 0%, #2eab59 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .bg-card button:hover {
+            background: linear-gradient(135deg, #146c31 0%, #267d4a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(27,135,63,0.3);
+        }
+
+        .bg-card button:active {
+            transform: scale(0.98);
+        }
+
+        /* Background Previews */
+        .preview-organic { background: linear-gradient(135deg, #0a4620 0%, #1b873f 25%, #2eab59 50%, #3fc972 75%, #52d97f 100%); }
+        .preview-glass {
+            background: linear-gradient(135deg, #0f5f2c 0%, #1b873f 50%, #2eab59 100%);
+            background-image:
+                linear-gradient(0deg, transparent 24%, rgba(255,255,255,.05) 25%, rgba(255,255,255,.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.05) 75%, rgba(255,255,255,.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(255,255,255,.05) 25%, rgba(255,255,255,.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.05) 75%, rgba(255,255,255,.05) 76%, transparent 77%, transparent);
+            background-size: 60px 60px;
+        }
+        .preview-wave { background: linear-gradient(180deg, #0a4620 0%, #1b873f 50%, #2eab59 100%); }
+        .preview-mesh { background: linear-gradient(45deg, #0a4620 0%, #1b873f 25%, #2eab59 50%, #3fc972 75%, #52d97f 100%); }
+        .preview-blob { background: linear-gradient(135deg, #0f5f2c 0%, #1b873f 50%, #2eab59 100%); }
+        .preview-aurora { background: linear-gradient(180deg, #0a3a1a 0%, #0f5f2c 30%, #1b873f 60%, #2eab59 100%); }
+        .preview-dot {
+            background: linear-gradient(135deg, #0f5f2c 0%, #1b873f 50%, #2eab59 100%);
+            background-image: radial-gradient(circle, rgba(255,255,255,0.15) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
+        .preview-swirl { background: linear-gradient(45deg, #0a4620 0%, #1b873f 40%, #2eab59 70%, #3fc972 100%); }
+
+        .full-screen-demo {
+            margin-top: 60px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .full-screen-demo h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1b873f;
+            margin-bottom: 20px;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .demo-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #1b873f;
+            color: #1b873f;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            background: #1b873f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(27,135,63,0.3);
+        }
+
+        .demo-btn.active {
+            background: linear-gradient(135deg, #1b873f 0%, #2eab59 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-header h1 {
+                font-size: 32px;
+            }
+
+            .backgrounds-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-container">
+        <div class="gallery-header">
+            <h1>✨ AgriConnect Background Gallery</h1>
+            <p>Choose your favorite creative background design</p>
+            <p class="subtitle">AI-Inspired designs with smooth animations</p>
+        </div>
+
+        <div class="backgrounds-grid">
+            <!-- Background 1: Organic -->
+            <div class="bg-card">
+                <div class="bg-preview preview-organic"></div>
+                <div class="bg-card-content">
+                    <h3>🌊 Organic Flows</h3>
+                    <p>Smooth, flowing blob shapes that morph continuously. Perfect for a modern, organic feel.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Smooth</span>
+                        <span class="feature-tag">Morphing</span>
+                        <span class="feature-tag">Modern</span>
+                    </div>
+                    <button onclick="copyCode('bg-organic')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 2: Glass Grid -->
+            <div class="bg-card">
+                <div class="bg-preview preview-glass"></div>
+                <div class="bg-card-content">
+                    <h3>🔷 Glassmorphism</h3>
+                    <p>Elegant grid pattern with glowing overlays. Creates a sophisticated tech aesthetic.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Tech</span>
+                        <span class="feature-tag">Grid</span>
+                        <span class="feature-tag">Elegant</span>
+                    </div>
+                    <button onclick="copyCode('bg-glass-grid')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 3: Wave Particles -->
+            <div class="bg-card">
+                <div class="bg-preview preview-wave"></div>
+                <div class="bg-card-content">
+                    <h3>🎪 Wave Particles</h3>
+                    <p>Floating particles with wave-like motion. Adds depth and dynamic energy to the page.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Animated</span>
+                        <span class="feature-tag">Floating</span>
+                        <span class="feature-tag">Dynamic</span>
+                    </div>
+                    <button onclick="copyCode('bg-wave-particles')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 4: Gradient Mesh -->
+            <div class="bg-card">
+                <div class="bg-preview preview-mesh"></div>
+                <div class="bg-card-content">
+                    <h3>🎨 Gradient Mesh</h3>
+                    <p>Shifting gradients with animated dot mesh. Creates a vibrant, artistic atmosphere.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Colorful</span>
+                        <span class="feature-tag">Art Style</span>
+                        <span class="feature-tag">Gradient</span>
+                    </div>
+                    <button onclick="copyCode('bg-gradient-mesh')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 5: Blob Network -->
+            <div class="bg-card">
+                <div class="bg-preview preview-blob"></div>
+                <div class="bg-card-content">
+                    <h3>🔮 Blob Network</h3>
+                    <p>Multiple blobs moving in harmony. Creates a mysterious, connected network feel.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Mystical</span>
+                        <span class="feature-tag">Network</span>
+                        <span class="feature-tag">3D Effect</span>
+                    </div>
+                    <button onclick="copyCode('bg-blob-network')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 6: Aurora -->
+            <div class="bg-card">
+                <div class="bg-preview preview-aurora"></div>
+                <div class="bg-card-content">
+                    <h3>🌌 Aurora Borealis</h3>
+                    <p>Flowing light waves with gradient overlay. Inspired by natural aurora lights.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Natural</span>
+                        <span class="feature-tag">Waves</span>
+                        <span class="feature-tag">Scenic</span>
+                    </div>
+                    <button onclick="copyCode('bg-aurora')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 7: Dot Pattern -->
+            <div class="bg-card">
+                <div class="bg-preview preview-dot"></div>
+                <div class="bg-card-content">
+                    <h3>⚪ Dot Matrix</h3>
+                    <p>Moving dot pattern with pulsing overlay. Minimal yet sophisticated design.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Minimal</span>
+                        <span class="feature-tag">Pattern</span>
+                        <span class="feature-tag">Elegant</span>
+                    </div>
+                    <button onclick="copyCode('bg-dot-pattern')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Background 8: Liquid Swirl -->
+            <div class="bg-card">
+                <div class="bg-preview preview-swirl"></div>
+                <div class="bg-card-content">
+                    <h3>💫 Liquid Swirl</h3>
+                    <p>Rotating liquid shapes with blur effects. Creates a smooth, flowing atmosphere.</p>
+                    <div class="bg-features">
+                        <span class="feature-tag highlight">Fluid</span>
+                        <span class="feature-tag">Rotating</span>
+                        <span class="feature-tag">Smooth</span>
+                    </div>
+                    <button onclick="copyCode('bg-liquid-swirl')">
+                        <i class="fa-solid fa-copy"></i> Copy Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="full-screen-demo">
+            <h2>🎯 See Them in Full Screen</h2>
+            <p style="color: #666; margin-bottom: 24px; font-size: 16px;">Click any button below to see the background in full screen demo</p>
+            <div class="demo-buttons">
+                <button class="demo-btn active" onclick="viewFullScreen('organic')">Organic</button>
+                <button class="demo-btn" onclick="viewFullScreen('glass')">Glass Grid</button>
+                <button class="demo-btn" onclick="viewFullScreen('wave')">Wave</button>
+                <button class="demo-btn" onclick="viewFullScreen('mesh')">Mesh</button>
+                <button class="demo-btn" onclick="viewFullScreen('blob')">Blob</button>
+                <button class="demo-btn" onclick="viewFullScreen('aurora')">Aurora</button>
+                <button class="demo-btn" onclick="viewFullScreen('dot')">Dot</button>
+                <button class="demo-btn" onclick="viewFullScreen('swirl')">Swirl</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(bgClass) {
+            const code = `<div class="${bgClass}" style="width: 100%; height: 100%; position: relative;"></div>`;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard! 🎉');
+            });
+        }
+
+        function viewFullScreen(type) {
+            const bgTypes = {
+                organic: 'bg-organic',
+                glass: 'bg-glass-grid',
+                wave: 'bg-wave-particles',
+                mesh: 'bg-gradient-mesh',
+                blob: 'bg-blob-network',
+                aurora: 'bg-aurora',
+                dot: 'bg-dot-pattern',
+                swirl: 'bg-liquid-swirl'
+            };
+
+            sessionStorage.setItem('selectedBg', bgTypes[type]);
+            window.open('/bg-demo?type=' + type, '_blank', 'width=1400,height=900');
+        }
+    </script>
+</body>
+</html>

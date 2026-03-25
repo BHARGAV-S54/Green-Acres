@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Background Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/backgrounds.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .demo-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .demo-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .demo-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            padding: 40px;
+            max-width: 600px;
+        }
+
+        .demo-content h1 {
+            font-size: 54px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideInDown 0.8s ease;
+        }
+
+        .demo-content p {
+            font-size: 20px;
+            opacity: 0.95;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            animation: fadeIn 0.8s ease 0.2s both;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: slideInUp 0.8s ease 0.4s both;
+        }
+
+        .demo-btn {
+            padding: 14px 32px;
+            background: rgba(255,255,255,0.95);
+            color: #1b873f;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            background: white;
+        }
+
+        .demo-btn:active {
+            transform: scale(0.96);
+        }
+
+        .demo-btn.primary {
+            background: linear-gradient(135deg, #1b873f 0%, #2eab59 100%);
+            color: white;
+        }
+
+        .demo-btn.primary:hover {
+            background: linear-gradient(135deg, #146c31 0%, #267d4a 100%);
+            box-shadow: 0 8px 24px rgba(27,135,63,0.4);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: rotate(90deg);
+        }
+
+        .stats {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            color: white;
+            font-size: 14px;
+            opacity: 0.8;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .stats div {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .demo-content h1 {
+                font-size: 36px;
+            }
+
+            .demo-content p {
+                font-size: 16px;
+            }
+
+            .demo-buttons {
+                gap: 12px;
+            }
+
+            .demo-btn {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-background {{ bg_class }}"></div>
+
+        <button class="close-btn" onclick="window.close()" title="Close (or press ESC)">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="demo-content">
+            <h1>✨ Beautiful Backgrounds</h1>
+            <p>Premium design created with AI-inspired creative patterns</p>
+
+            <div class="demo-buttons">
+                <button class="demo-btn primary" onclick="copyAndClose()">
+                    <i class="fa-solid fa-copy"></i> Copy CSS & Close
+                </button>
+                <button class="demo-btn" onclick="window.history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Gallery
+                </button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div>
+                <i class="fa-solid fa-check-circle"></i>
+                100% CSS Generated
+            </div>
+            <div>
+                <i class="fa-solid fa-lightning"></i>
+                Smooth Animations
+            </div>
+            <div>
+                <i class="fa-solid fa-palette"></i>
+                Fully Customizable
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyAndClose() {
+            const bgClass = document.querySelector('.demo-background').className.replace('demo-background ', '');
+            const code = `<!-- Add this CSS file to your project -->
+<link rel="stylesheet" href="css/backgrounds.css">
+
+<!-- Then use in any element: -->
+<div class="${bgClass}" style="width: 100%; height: 100%;"></div>`;
+
+            navigator.clipboard.writeText(code).then(() => {
+                alert('CSS code copied! 🎉 Ready to use in your project!');
+                window.close();
+            });
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.close();
+            }
+        });
+    </script>
+</body>
+</html>

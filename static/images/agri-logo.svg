@@ -1,0 +1,63 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#2eab59" opacity="0.3"/>
+
+  <!-- Sun -->
+  <circle cx="60" cy="45" r="25" fill="#fbbf24"/>
+
+  <!-- Palm trees -->
+  <g>
+    <!-- Left palm trunk -->
+    <rect x="30" y="85" width="4" height="25" fill="#8b7355"/>
+    <!-- Left palm leaves -->
+    <path d="M32 85 Q20 75 15 60" stroke="#2d5016" stroke-width="2" fill="none"/>
+    <path d="M32 85 Q25 70 25 50" stroke="#2d5016" stroke-width="2" fill="none"/>
+    <path d="M32 85 Q40 75 45 60" stroke="#2d5016" stroke-width="2" fill="none"/>
+  </g>
+
+  <!-- Farmer -->
+  <g>
+    <!-- Head -->
+    <circle cx="70" cy="65" r="6" fill="#2d2d2d"/>
+    <!-- Body -->
+    <line x1="70" y1="71" x2="70" y2="90" stroke="#2d2d2d" stroke-width="3"/>
+    <!-- Arms -->
+    <line x1="70" y1="75" x2="55" y2="85" stroke="#2d2d2d" stroke-width="2"/>
+    <line x1="70" y1="75" x2="85" y2="78" stroke="#2d2d2d" stroke-width="2"/>
+    <!-- Legs -->
+    <line x1="70" y1="90" x2="65" y2="110" stroke="#2d2d2d" stroke-width="2"/>
+    <line x1="70" y1="90" x2="75" y2="110" stroke="#2d2d2d" stroke-width="2"/>
+  </g>
+
+  <!-- Cow -->
+  <g>
+    <!-- Body -->
+    <ellipse cx="105" cy="95" rx="20" ry="14" fill="#1a1a1a"/>
+    <!-- Head -->
+    <circle cx="125" cy="95" r="8" fill="#1a1a1a"/>
+    <!-- Horns -->
+    <line x1="122" y1="88" x2="120" y2="82" stroke="#1a1a1a" stroke-width="1.5"/>
+    <line x1="128" y1="88" x2="130" y2="82" stroke="#1a1a1a" stroke-width="1.5"/>
+    <!-- Legs -->
+    <line x1="95" y1="109" x2="95" y2="125" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="105" y1="109" x2="105" y2="125" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="115" y1="109" x2="115" y2="125" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="125" y1="109" x2="125" y2="125" stroke="#1a1a1a" stroke-width="2"/>
+  </g>
+
+  <!-- Rope/connection between farmer and cow -->
+  <path d="M85 90 Q95 85 105 95" stroke="#8b7355" stroke-width="1" fill="none"/>
+
+  <!-- Grass line -->
+  <path d="M20 140 Q40 135 60 140 T100 140 T140 140 T180 140 L200 140 L200 160 L0 160 Z" fill="#1b5e20" opacity="0.8"/>
+
+  <!-- Grass details -->
+  <g stroke="#2d5016" stroke-width="0.5" opacity="0.6">
+    <line x1="25" y1="140" x2="23" y2="135"/>
+    <line x1="35" y1="140" x2="33" y2="135"/>
+    <line x1="50" y1="140" x2="48" y2="135"/>
+    <line x1="75" y1="140" x2="73" y2="135"/>
+    <line x1="95" y1="140" x2="93" y2="135"/>
+    <line x1="120" y1="140" x2="118" y2="135"/>
+  </g>
+</svg>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect – Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-split">
+        <!-- Brand Panel -->
+        <div class="auth-brand">
+            <div class="brand-inner">
+                <div class="brand-logo">
+                    <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                    <span>AgriConnect</span>
+                </div>
+                <h1 class="brand-headline">Grow Together.<br>Farm Smarter.</h1>
+                <p class="brand-sub">The social network built for farmers. Connect with thousands of farming communities, share knowledge, buy & sell in the market.</p>
+                <div class="brand-stats">
+                    <div class="bstat"><strong>50K+</strong><span>Farmers</span></div>
+                    <div class="bstat"><strong>200+</strong><span>Districts</span></div>
+                    <div class="bstat"><strong>18</strong><span>Crops Listed</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="auth-form-panel">
+            <div class="auth-card">
+                <h2 class="auth-title">Welcome Back 👋</h2>
+                <p class="auth-subtitle">Log in to your AgriConnect account</p>
+
+                {% if error %}
+                <div class="auth-alert error">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/login" id="login-form">
+                    <div class="input-group">
+                        <label for="email">Email or Username</label>
+                        <div class="input-wrap">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="text" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="toggle-pw" onclick="togglePw('password', this)">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </button>
+                </form>
+                <p class="auth-switch">New to AgriConnect? <a href="/register">Create an account</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePw(id, btn) {
+            const input = document.getElementById(id);
+            const icon  = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+    </script>
+</body>
+</html>

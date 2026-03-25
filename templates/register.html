@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect – Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-split">
+        <!-- Brand Panel -->
+        <div class="auth-brand">
+            <div class="brand-inner">
+                <div class="brand-logo">
+                    <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                    <span>AgriConnect</span>
+                </div>
+                <h1 class="brand-headline">Join India's Farmer Community</h1>
+                <p class="brand-sub">Share updates, discover market listings, chat with other farmers, and grow your farming network – all in one place.</p>
+                <ul class="brand-features">
+                    <li><i class="fa-solid fa-check-circle"></i> Free to join</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Buy &amp; Sell in the Market</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Connect with nearby farmers</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Get local weather updates</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-form-panel">
+            <div class="auth-card">
+                <h2 class="auth-title">Create Account 🌾</h2>
+                <p class="auth-subtitle">Start your AgriConnect journey</p>
+
+                {% if error %}
+                <div class="auth-alert error">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/register" id="register-form">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="full_name">Full Name</label>
+                            <div class="input-wrap">
+                                <i class="fa-regular fa-user input-icon"></i>
+                                <input type="text" id="full_name" name="full_name" placeholder="Rajesh Kumar" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="username">Username</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-at input-icon"></i>
+                                <input type="text" id="username" name="username" placeholder="rajesh_farmer" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-wrap">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="title">Farm / Profession</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-wheat-awn input-icon"></i>
+                            <input type="text" id="title" name="title" placeholder="e.g. Wheat Farmer, Dairy Farmer">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Location (State, District)</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-location-dot input-icon"></i>
+                            <input type="text" id="location" name="location" placeholder="e.g. Punjab, India">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="password" name="password" placeholder="min 6 chars" required>
+                                <button type="button" class="toggle-pw" onclick="togglePw('password', this)">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="confirm_password">Confirm Password</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="confirm_password" name="confirm_password" placeholder="repeat password" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fa-solid fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePw(id, btn) {
+            const input = document.getElementById(id);
+            const icon  = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+    </script>
+</body>
+</html>

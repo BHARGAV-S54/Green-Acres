@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main class="main-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="card profile-card">
+                <div class="profile-banner"></div>
+                <div class="profile-info">
+                    <img src="{{ user.avatar_url }}" alt="User Avatar" class="profile-avatar">
+                    <h2 class="user-title">{{ user.name }}</h2>
+                    <p class="user-location"><i class="fa-solid fa-location-dot"></i> {{ user.location }}</p>
+                </div>
+                <div class="card-footer profile-stats">
+                    <span>Connections</span>
+                    <span class="stat-number">{{ user.connections }}</span>
+                </div>
+            </div>
+            <div class="card weather-card">
+                <h3 class="weather-title"><i class="fa-solid fa-cloud-sun weather-icon"></i> Local Weather</h3>
+                <div class="weather-main">
+                    <div class="temp-box">
+                        <span class="temp">32°C</span>
+                        <span class="condition">Mostly Sunny</span>
+                    </div>
+                    <div class="weather-details">
+                        <p>Humidity: 65%</p>
+                        <p>Wind: 12 km/h</p>
+                        <p>Rain Chance: 10%</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Feed -->
+        <section class="feed">
+            <div class="card create-post-box">
+                <div class="create-post-top">
+                    <img src="{{ user.avatar_url }}" alt="User Avatar" class="post-avatar">
+                    <input type="text" class="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
+                </div>
+                <div class="create-post-actions">
+                    <button class="action-btn"><i class="fa-regular fa-image text-blue"></i> Photo/Video</button>
+                    <button class="action-btn"><i class="fa-solid fa-cloud-sun text-orange"></i> Weather Update</button>
+                    <button class="action-btn"><i class="fa-solid fa-tractor text-green"></i> Need Tool</button>
+                </div>
+            </div>
+            <div class="feed-divider"><span>COMMUNITY FEED</span></div>
+            {% for post in posts %}
+            <div class="card post-card">
+                <div class="post-header">
+                    <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
+                    <div class="post-meta">
+                        <h4 class="post-author">{{ post.author_name }}</h4>
+                        <p class="post-author-title">{{ post.author_title }}</p>
+                        <p class="post-time">{{ post.time_ago }}</p>
+                    </div>
+                    <button class="post-options"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+                <div class="post-content"><p>{{ post.content }}</p></div>
+                <div class="post-stats">
+                    <span class="likes-count">{{ post.likes }} Likes</span>
+                    <span class="comments-count">{{ post.comments }} Comments</span>
+                </div>
+                <div class="post-actions">
+                    <button class="post-action-btn"><i class="fa-regular fa-thumbs-up"></i> Helpful</button>
+                    <button class="post-action-btn"><i class="fa-regular fa-comment"></i> Comment</button>
+                    <button class="post-action-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <div class="card suggestion-card">
+                <h3 class="panel-heading">People You May Know</h3>
+                {% for friend in suggestions %}
+                <div class="suggest-item">
+                    <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="suggest-avatar">
+                    <div class="suggest-info">
+                        <p class="suggest-name">{{ friend.name }}</p>
+                        <p class="suggest-title">{{ friend.title }}</p>
+                    </div>
+                    <button class="connect-btn"><i class="fa-solid fa-plus"></i> Connect</button>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

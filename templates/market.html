@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main class="market-container">
+        <!-- Market Header Banner -->
+        <div class="market-hero">
+            <div class="market-hero-text">
+                <h1>🌾 AgriConnect Marketplace</h1>
+                <p>Buy, Sell, or Rent tractors, fertilizers, seeds, crops, and more — directly from farmers near you.</p>
+            </div>
+            <button class="post-listing-btn" id="open-listing-modal">
+                <i class="fa-solid fa-plus"></i> Post a Listing
+            </button>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="market-filters">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="tractor">🚜 Tractors</button>
+            <button class="filter-tab" data-filter="fertilizer">🧪 Fertilizers</button>
+            <button class="filter-tab" data-filter="ghee">🫙 Ghee</button>
+            <button class="filter-tab" data-filter="grain">🌾 Grains</button>
+            <button class="filter-tab" data-filter="crop">🥬 Crops</button>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid" id="product-grid">
+
+            <!-- Tractor - Rent -->
+            <div class="product-card" data-category="tractor">
+                <div class="product-badge rent">Rent</div>
+                <div class="product-image tractor-bg">
+                    <i class="fa-solid fa-tractor product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Mahindra JIVO 245 DI Tractor</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Ravi Shankar · Punjab</p>
+                    <div class="product-tags">
+                        <span class="ptag">4WD</span>
+                        <span class="ptag">24HP</span>
+                        <span class="ptag">2023 Model</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹1,800 <small>/day</small></span>
+                        <button class="buy-btn rent-btn">Rent Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tractor - Purchase -->
+            <div class="product-card" data-category="tractor">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image tractor-bg">
+                    <i class="fa-solid fa-tractor product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Sonalika GT 20 Mini Tractor</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Anand Kumar · Haryana</p>
+                    <div class="product-tags">
+                        <span class="ptag">2WD</span>
+                        <span class="ptag">20HP</span>
+                        <span class="ptag">Good Condition</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹3,40,000</span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fertilizer - Sell -->
+            <div class="product-card" data-category="fertilizer">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image fertilizer-bg">
+                    <i class="fa-solid fa-flask-vial product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Vermicompost Fertilizer (50kg)</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> GreenEarth Farms · UP</p>
+                    <div class="product-tags">
+                        <span class="ptag">Organic</span>
+                        <span class="ptag">50kg Bag</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹420 <small>/bag</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fertilizer - DAP -->
+            <div class="product-card" data-category="fertilizer">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image fertilizer-bg">
+                    <i class="fa-solid fa-flask-vial product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">DAP Fertilizer (50kg)</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Kisaan Store · MP</p>
+                    <div class="product-tags">
+                        <span class="ptag">NPK Rich</span>
+                        <span class="ptag">50kg</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹1,350 <small>/bag</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ghee -->
+            <div class="product-card" data-category="ghee">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image ghee-bg">
+                    <i class="fa-solid fa-jar product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Pure Desi Cow Ghee (1L)</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Gopal Dairy · Gujarat</p>
+                    <div class="product-tags">
+                        <span class="ptag">A2 Cow</span>
+                        <span class="ptag">Pure</span>
+                        <span class="ptag">No Additives</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹850 <small>/litre</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ghee - Buffalo -->
+            <div class="product-card" data-category="ghee">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image ghee-bg">
+                    <i class="fa-solid fa-jar product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Buffalo Ghee (500ml Jar)</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Farm Fresh · Rajasthan</p>
+                    <div class="product-tags">
+                        <span class="ptag">Handcrafted</span>
+                        <span class="ptag">500ml</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹480 <small>/jar</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grain - Wheat -->
+            <div class="product-card" data-category="grain">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image grain-bg">
+                    <i class="fa-solid fa-wheat-awn product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Premium Wheat (Sharbati) 1 Quintal</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Rajesh Kumar · Punjab</p>
+                    <div class="product-tags">
+                        <span class="ptag">Grade A</span>
+                        <span class="ptag">Clean</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹2,200 <small>/quintal</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grain - Rice -->
+            <div class="product-card" data-category="grain">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image grain-bg">
+                    <i class="fa-solid fa-wheat-awn product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Basmati Rice (Long Grain) 50kg</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Mohan Das · UP</p>
+                    <div class="product-tags">
+                        <span class="ptag">Aged</span>
+                        <span class="ptag">Aromatic</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹4,800 <small>/50kg</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crop - Tomato -->
+            <div class="product-card" data-category="crop">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image crop-bg">
+                    <i class="fa-solid fa-leaf product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Fresh Tomato (Desi Hybrid) 10kg</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Suresh Farms · AP</p>
+                    <div class="product-tags">
+                        <span class="ptag">Fresh</span>
+                        <span class="ptag">Pesticide Free</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹320 <small>/10kg</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crop - Onion -->
+            <div class="product-card" data-category="crop">
+                <div class="product-badge sell">For Sale</div>
+                <div class="product-image crop-bg">
+                    <i class="fa-solid fa-leaf product-icon"></i>
+                </div>
+                <div class="product-body">
+                    <h3 class="product-name">Red Onion 50kg Bag</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> Kisaan Crop Co · Maharashtra</p>
+                    <div class="product-tags">
+                        <span class="ptag">Grade A</span>
+                        <span class="ptag">50kg</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-price">₹1,100 <small>/50kg</small></span>
+                        <button class="buy-btn">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Post Listing Modal -->
+    <div class="modal-overlay" id="listing-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Post a Listing</h3>
+                <button class="modal-close" id="close-listing-modal">&times;</button>
+            </div>
+            <form class="modal-form" id="listing-form">
+                <select class="modal-select" name="category" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="tractor">🚜 Tractor</option>
+                    <option value="fertilizer">🧪 Fertilizer</option>
+                    <option value="ghee">🫙 Ghee</option>
+                    <option value="grain">🌾 Grain</option>
+                    <option value="crop">🥬 Crop</option>
+                </select>
+                <select class="modal-select" name="listing_type" required>
+                    <option value="" disabled selected>Listing Type</option>
+                    <option value="sell">For Sale</option>
+                    <option value="rent">For Rent</option>
+                </select>
+                <input type="text" class="modal-input" name="title" placeholder="Product Title" required>
+                <input type="text" class="modal-input" name="price" placeholder="Price (e.g. ₹500/kg)" required>
+                <textarea class="modal-textarea" name="description" placeholder="Description..." rows="3"></textarea>
+                <button type="submit" class="modal-submit-btn">Post Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.dataset.filter;
+                document.querySelectorAll('.product-card').forEach(card => {
+                    card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none';
+                });
+            });
+        });
+
+        // Modal
+        document.getElementById('open-listing-modal').addEventListener('click', () => {
+            document.getElementById('listing-modal').classList.add('visible');
+        });
+        document.getElementById('close-listing-modal').addEventListener('click', () => {
+            document.getElementById('listing-modal').classList.remove('visible');
+        });
+        document.getElementById('listing-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('listing-modal')) {
+                document.getElementById('listing-modal').classList.remove('visible');
+            }
+        });
+        document.getElementById('listing-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('listing-modal').classList.remove('visible');
+            alert('Your listing has been submitted for review! 🌾');
+            e.target.reset();
+        });
+    </script>
+</body>
+</html>

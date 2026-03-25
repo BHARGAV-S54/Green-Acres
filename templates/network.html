@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main class="network-container">
+        <!-- Friends List Sidebar -->
+        <aside class="friends-sidebar">
+            <div class="friends-header">
+                <h2>Connections</h2>
+                <div class="friends-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="friends-search-input" placeholder="Search connections..." aria-label="Search connections">
+                </div>
+            </div>
+            <div class="friends-list" id="friends-list">
+                {% for friend in friends %}
+                <div class="friend-item {% if loop.first %}active{% endif %}" data-friend-id="{{ friend.id }}" onclick="selectFriend({{ friend.id }}, '{{ friend.name }}', '{{ friend.avatar_url }}', '{{ friend.title }}')">
+                    <div class="friend-avatar-wrap">
+                        <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="friend-avatar">
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="friend-info">
+                        <p class="friend-name">{{ friend.name }}</p>
+                        <p class="friend-title">{{ friend.title }}</p>
+                    </div>
+                    <span class="friend-time">2m</span>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header" id="chat-header">
+                <div class="chat-header-info">
+                    <img src="{{ friends[0].avatar_url }}" alt="Chat user" class="chat-avatar" id="chat-avatar">
+                    <div>
+                        <p class="chat-name" id="chat-name">{{ friends[0].name }}</p>
+                        <p class="chat-status">Online – {{ friends[0].title }}</p>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="chat-icon-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
+                    <button class="chat-icon-btn" title="Video call"><i class="fa-solid fa-video"></i></button>
+                    <button class="chat-icon-btn" title="Info"><i class="fa-solid fa-circle-info"></i></button>
+                </div>
+            </div>
+            <div class="messages-area" id="messages-area">
+                <div class="msg-date-sep"><span>Today</span></div>
+                <!-- Received -->
+                <div class="msg-row received">
+                    <img src="{{ friends[0].avatar_url }}" alt="" class="msg-avatar">
+                    <div class="msg-bubble received-bubble">Is the drip irrigation guide ready to share? 🌱</div>
+                </div>
+                <!-- Sent -->
+                <div class="msg-row sent">
+                    <div class="msg-bubble sent-bubble">Yes! I'll send the PDF soon. Also, how's your wheat harvest coming along?</div>
+                </div>
+                <!-- Received -->
+                <div class="msg-row received">
+                    <img src="{{ friends[0].avatar_url }}" alt="" class="msg-avatar">
+                    <div class="msg-bubble received-bubble">Looking good! Rain came at just the right time 🌧️</div>
+                </div>
+                <!-- Sent -->
+                <div class="msg-row sent">
+                    <div class="msg-bubble sent-bubble">That's great news! Let's connect soon 🤝</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <button class="chat-icon-btn"><i class="fa-solid fa-paperclip"></i></button>
+                <button class="chat-icon-btn"><i class="fa-regular fa-image"></i></button>
+                <input type="text" class="chat-input" id="chat-input" placeholder="Write a message..." aria-label="Message input">
+                <button class="send-btn" id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Friend Profile Panel -->
+        <aside class="profile-panel" id="profile-panel">
+            <div class="profile-panel-inner">
+                <img src="{{ friends[0].avatar_url }}" alt="" class="pp-avatar" id="pp-avatar">
+                <h3 class="pp-name" id="pp-name">{{ friends[0].name }}</h3>
+                <p class="pp-title" id="pp-title">{{ friends[0].title }}</p>
+                <p class="pp-loc"><i class="fa-solid fa-location-dot"></i> Andhra Pradesh, India</p>
+                <div class="pp-actions">
+                    <button class="pp-btn primary-btn">View Full Profile</button>
+                    <button class="pp-btn outline-btn">Unfollow</button>
+                </div>
+                <div class="pp-section">
+                    <h4>Shared Interests</h4>
+                    <div class="tags">
+                        <span class="tag">🌾 Wheat Farming</span>
+                        <span class="tag">💧 Drip Irrigation</span>
+                        <span class="tag">🌿 Organic</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        const friendsData = {{ friends|tojson }};
+
+        function selectFriend(id, name, avatar, title) {
+            document.querySelectorAll('.friend-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.friend-item[data-friend-id="${id}"]`).classList.add('active');
+            document.getElementById('chat-avatar').src = avatar;
+            document.getElementById('chat-name').textContent = name;
+            document.getElementById('pp-avatar').src = avatar;
+            document.getElementById('pp-name').textContent = name;
+            document.getElementById('pp-title').textContent = title;
+            document.getElementById('messages-area').innerHTML = `
+                <div class="msg-date-sep"><span>Today</span></div>
+                <div class="msg-row received">
+                    <img src="${avatar}" alt="" class="msg-avatar">
+                    <div class="msg-bubble received-bubble">Hey! How are things going on the farm?</div>
+                </div>
+                <div class="msg-row sent">
+                    <div class="msg-bubble sent-bubble">Pretty good! Just started new crop rotation.</div>
+                </div>
+            `;
+        }
+
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const area = document.getElementById('messages-area');
+            const row = document.createElement('div');
+            row.className = 'msg-row sent';
+            row.innerHTML = `<div class="msg-bubble sent-bubble">${text}</div>`;
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
+            input.value = '';
+        }
+
+        document.getElementById('friends-search-input').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.friend-item').forEach(el => {
+                const name = el.querySelector('.friend-name').textContent.toLowerCase();
+                el.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

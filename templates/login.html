@@ -10,7 +10,6 @@
 </head>
 <body class="auth-body">
     <div class="auth-split">
-        <!-- Brand Panel -->
         <div class="auth-brand">
             <div class="brand-inner">
                 <div class="brand-logo">
@@ -30,19 +29,19 @@
             </div>
         </div>
 
-        <!-- Login Form -->
         <div class="auth-form-panel">
             <div class="auth-card">
                 <h2 class="auth-title">Welcome Back 👋</h2>
                 <p class="auth-subtitle">Log in to your GreenAcres account</p>
 
-                {% if error %}
-                <div class="auth-alert error">
-                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                <div class="auth-alert error" id="login-error" style="display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i> <span id="error-message"></span>
                 </div>
-                {% endif %}
+                <div class="auth-alert success" id="login-success" style="display: none;">
+                    <i class="fa-solid fa-check-circle"></i> <span id="success-message"></span>
+                </div>
 
-                <form method="POST" action="/login" id="login-form">
+                <form id="login-form">
                     <div class="input-group">
                         <label for="email">Email or Username</label>
                         <div class="input-wrap">
@@ -60,9 +59,18 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="auth-btn">
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="remember" style="width: 16px; height: 16px;">
+                            <span style="font-weight: 400; font-size: 14px;">Remember me</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="auth-btn" id="login-btn">
                         <i class="fa-solid fa-right-to-bracket"></i> Login
                     </button>
+                    <div class="auth-loading" id="login-loading" style="display: none;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Signing in...
+                    </div>
                 </form>
                 <p class="auth-switch">New to GreenAcres? <a href="/register">Create an account</a></p>
             </div>
@@ -72,7 +80,7 @@
     <script>
         function togglePw(id, btn) {
             const input = document.getElementById(id);
-            const icon  = btn.querySelector('i');
+            const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.className = 'fa-regular fa-eye-slash';
@@ -81,6 +89,61 @@
                 icon.className = 'fa-regular fa-eye';
             }
         }
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('login-error');
+            const successDiv = document.getElementById('login-success');
+            const btn = document.getElementById('login-btn');
+            const loading = document.getElementById('login-loading');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.style.display = 'none';
+            loading.style.display = 'block';
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, remember })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successDiv.querySelector('#success-message').textContent = data.message;
+                    successDiv.style.display = 'flex';
+                    setTimeout(() => { window.location.href = '/'; }, 500);
+                } else {
+                    document.getElementById('error-message').textContent = data.message;
+                    errorDiv.style.display = 'flex';
+                    btn.disabled = false;
+                    btn.style.display = 'flex';
+                    loading.style.display = 'none';
+                }
+            } catch (err) {
+                document.getElementById('error-message').textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'flex';
+                btn.disabled = false;
+                btn.style.display = 'flex';
+                loading.style.display = 'none';
+            }
+        });
+
+        // Check if already logged in
+        (async function checkAuth() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) window.location.href = '/';
+            } catch {}
+        })();
     </script>
 </body>
 </html>

@@ -49,7 +49,7 @@
                 <a href="#" class="dropdown-item">
                     <i class="fa-solid fa-gear"></i> Settings
                 </a>
-                <a href="/logout" class="dropdown-item danger">
+                <a href="#" class="dropdown-item danger" id="logout-btn" onclick="logout(); return false;">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>
@@ -74,4 +74,15 @@
     document.addEventListener('click', function () {
         document.getElementById('profile-dropdown')?.classList.remove('open');
     });
+<<<<<<< HEAD
 </script>
+=======
+
+    async function logout() {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+        } catch {}
+        window.location.href = '/login';
+    }
+</script>
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00

@@ -127,8 +127,13 @@ INSERT IGNORE INTO users
 VALUES
     ('Organic Farmer',
      'demo_farmer',
+<<<<<<< HEAD
      'demo@greenacres.in',
      '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',  -- bcrypt of "farmer123"
+=======
+     'demo@agriconnect.in',
+     '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
      'Organic Farmer & Agri-Tech Enthusiast',
      'Andhra Pradesh, India',
      'Passionate about sustainable farming and agri-technology. Sharing knowledge with fellow farmers.',
@@ -140,8 +145,13 @@ INSERT IGNORE INTO users
 VALUES
     ('Rajesh Kumar',
      'rajesh_farmer',
+<<<<<<< HEAD
      'rajesh@greenacres.in',
      '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',
+=======
+     'rajesh@agriconnect.in',
+     '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
      'Traditional Wheat Farmer',
      'Punjab, India',
      'Third generation wheat farmer from Punjab. I swear by drip irrigation!',

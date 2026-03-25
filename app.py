@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 import hashlib
 from datetime import datetime, timezone, timedelta
@@ -21,20 +22,39 @@ import mysql.connector
 # ──────────────────────────────────────────────
 app = Flask(__name__)
 
+<<<<<<< HEAD
+SECRET_KEY    = os.environ.get('GREENACRES_SECRET', 'greenacres-jwt-secret-2026-change-me')
+JWT_ALGORITHM = 'HS256'
+JWT_EXP_HOURS = 24          # token lives for 24 hours
+COOKIE_NAME   = 'ga_token'  # HTTP-only cookie name
+
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+=======
 SECRET_KEY = os.environ.get("AGRICONNECT_SECRET", "agri-jwt-secret-2024-change-me")
 JWT_ALGORITHM = "HS256"
 JWT_EXP_HOURS = 24  # token lives for 24 hours
 COOKIE_NAME = "ac_token"  # HTTP-only cookie name
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 
 # ──────────────────────────────────────────────
 #  Database helpers
 # ──────────────────────────────────────────────
 DB_CONFIG = {
+<<<<<<< HEAD
+    'host':     '127.0.0.1',
+    'user':     'root',
+    'password': 'root',
+    'database': 'agriconnect_db',
+    'charset':  'utf8mb4',
+=======
     "host": "127.0.0.1",
     "user": "root",
     "password": "root",
     "database": "agriconnect_db",
     "charset": "utf8mb4",
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 }
 
 
@@ -105,7 +125,11 @@ def create_token(user_id: int, username: str) -> str:
         "iat": datetime.now(timezone.utc),
         "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXP_HOURS),
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
+    encoded = jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
+    # Ensure it's a string, not bytes (v1.x vs v2.x of PyJWT)
+    if isinstance(encoded, bytes):
+        return encoded.decode('utf-8')
+    return encoded
 
 
 def decode_token(token: str):
@@ -156,6 +180,13 @@ def login_required(f):
 #  Fallback data  (used when DB is unavailable)
 # ──────────────────────────────────────────────
 DEMO_USER = {
+<<<<<<< HEAD
+    'id': 0, 'full_name': 'Demo Farmer', 'username': 'demo',
+    'email': 'demo@greenacres.in',
+    'title': 'Organic Farmer & Agri-Tech Enthusiast',
+    'location': 'Andhra Pradesh, India', 'connections': 342,
+    'avatar_url': 'https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true',
+=======
     "id": 0,
     "full_name": "Demo Farmer",
     "username": "demo",
@@ -164,6 +195,7 @@ DEMO_USER = {
     "location": "Andhra Pradesh, India",
     "connections": 342,
     "avatar_url": "https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true",
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 }
 
 DEMO_POSTS = [
@@ -296,12 +328,15 @@ def login_post():
         one=True,
     )
 
-    # No DB → accept demo credentials for dev
     if user is None:
+<<<<<<< HEAD
+        if email_or_user in ('demo@greenacres.in', 'demo_farmer') and password == 'farmer123':
+=======
         if (
             email_or_user in ("demo@agriconnect.in", "demo_farmer")
             and password == "farmer123"
         ):
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
             user = DEMO_USER.copy()
             token = create_token(0, "demo_farmer")
             resp = make_response(redirect("/"))
@@ -366,12 +401,15 @@ def register_post():
         (full_name, username, email, pw_hash, title, location, avatar_url),
     )
 
+    print(f"[Register] DB result: {result}") # DEBUG
+
     if result == -2:
         return render_template(
             "register.html", error="Email or username already registered."
         )
     if result < 0:
-        # DB not ready – still issue a token for demo purposes
+        # DB not ready – still issue a token for demo purposes (id=0)
+        print("[Register] DB Error detected, falling back to demo login")
         token = create_token(0, username)
         resp = make_response(redirect("/"))
         resp.set_cookie(COOKIE_NAME, token, httponly=True, max_age=JWT_EXP_HOURS * 3600)
@@ -628,16 +666,106 @@ def api_logout():
 def index(user):
     user = normalise_user(user)
     posts = load_posts_db()
+<<<<<<< HEAD
+    
+    # 1. Fetch current friends (accepted connections)
+    friends = query(
+        '''SELECT u.id, u.full_name AS name, u.title, u.avatar_url 
+           FROM users u
+           JOIN connections c ON (c.requester_id = u.id OR c.receiver_id = u.id)
+           WHERE (c.requester_id = %s OR c.receiver_id = %s)
+             AND u.id != %s
+             AND c.status = "accepted"''',
+        (user['id'], user['id'], user['id'])
+    )
+    
+    # 2. Fetch suggestions (not the user, and not already connected)
+    suggestions = query(
+        '''SELECT id, full_name AS name, title, avatar_url 
+           FROM users 
+           WHERE id != %s 
+             AND id NOT IN (
+                 SELECT requester_id FROM connections WHERE receiver_id = %s
+                 UNION
+                 SELECT receiver_id FROM connections WHERE requester_id = %s
+             )
+           LIMIT 3''',
+        (user['id'], user['id'], user['id'])
+    )
+    
+    return render_template('index.html', user=user, posts=posts, suggestions=suggestions, friends=friends)
+
+
+@app.route('/api/post/create', methods=['POST'])
+@login_required
+def api_create_post(user, post_id=None):
+    user = normalise_user(user)
+    content = request.form.get('content', '').strip()
+    image = request.files.get('image')
+    
+    if not content and not image:
+        return jsonify({'status': 'error', 'message': 'Post content cannot be empty'}), 400
+        
+    media_url = None
+    if image:
+        filename = f"post_{user['id']}_{int(time.time())}.jpg"
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image.save(save_path)
+        media_url = f"/static/uploads/posts/{filename}"
+        
+    res = execute(
+        'INSERT INTO posts (user_id, content, media_url) VALUES (%s, %s, %s)',
+        (user['id'], content, media_url)
+    )
+    
+    if res > 0:
+        return jsonify({'status': 'success', 'post_id': res})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route('/api/post/like/<int:post_id>', methods=['POST'])
+@login_required
+def api_like_post(user, post_id):
+    user = normalise_user(user)
+    liked = query('SELECT * FROM post_likes WHERE user_id=%s AND post_id=%s', (user['id'], post_id), one=True)
+    
+    if liked:
+        execute('DELETE FROM post_likes WHERE user_id=%s AND post_id=%s', (user['id'], post_id))
+        execute('UPDATE posts SET likes = GREATEST(0, CAST(likes AS SIGNED) - 1) WHERE id=%s', (post_id,))
+        is_liked = False
+    else:
+        execute('INSERT IGNORE INTO post_likes (user_id, post_id) VALUES (%s, %s)', (user['id'], post_id))
+        execute('UPDATE posts SET likes = likes + 1 WHERE id=%s', (post_id,))
+        is_liked = True
+        
+    new_count = query('SELECT likes FROM posts WHERE id=%s', (post_id,), one=True)
+    return jsonify({'status': 'success', 'is_liked': is_liked, 'likes_count': new_count['likes'] if new_count else 0})
+
+
+@app.route('/api/post/comment/<int:post_id>', methods=['POST'])
+@login_required
+def api_comment_post(user, post_id):
+    user = normalise_user(user)
+    content = request.json.get('content', '').strip()
+    if not content: return jsonify({'status': 'error', 'message': 'Comment cannot be empty'}), 400
+    
+    res = execute('INSERT INTO post_comments (post_id, user_id, content) VALUES (%s, %s, %s)', (post_id, user['id'], content))
+    if res > 0:
+        execute('UPDATE posts SET comments = comments + 1 WHERE id=%s', (post_id,))
+        return jsonify({'status': 'success', 'comment': {'author_name': user['full_name'], 'avatar_url': user['avatar_url'], 'content': content}})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+=======
     return render_template(
         "index.html", user=user, posts=posts, suggestions=DEMO_SUGGESTIONS
     )
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 
 
 @app.route("/network")
 @login_required
 def network(user):
     user = normalise_user(user)
-    # Fetch accepted connections – fallback to demo list
+    # Fetch accepted connections
     conn_rows = query(
         """SELECT u.id, u.full_name AS name, u.title, u.avatar_url
            FROM connections c
@@ -648,6 +776,82 @@ def network(user):
            LIMIT 30""",
         (user["id"], user["id"], user["id"]),
     )
+<<<<<<< HEAD
+    friends = conn_rows if conn_rows else []
+    
+    # Fetch suggestions (users not connected)
+    suggestions = query(
+        '''SELECT id, full_name AS name, title, avatar_url 
+           FROM users 
+           WHERE id != %s AND id NOT IN (
+               SELECT CASE WHEN requester_id=%s THEN receiver_id ELSE requester_id END
+               FROM connections 
+               WHERE requester_id=%s OR receiver_id=%s
+           )
+           LIMIT 5''',
+        (user['id'], user['id'], user['id'], user['id'])
+    )
+    
+    for f in (friends + suggestions):
+        # Ensure name exists for first-letter fallback
+        display_name = (f.get('name') or f.get('username') or 'User')
+        if not f.get('avatar_url'):
+            initial = display_name[0] if display_name else 'U'
+            f['avatar_url'] = f"https://ui-avatars.com/api/?name={initial}&background=random&rounded=true"
+            
+    return render_template('network.html', user=user, friends=friends, suggestions=suggestions)
+
+
+@app.route('/api/connect/<int:target_id>', methods=['POST'])
+@login_required
+def api_connect(user, target_id):
+    user = normalise_user(user)
+    
+    # 1. Prevent connecting to self
+    if user['id'] == target_id:
+        return jsonify({'status': 'error', 'message': 'Cannot connect to yourself'}), 400
+    
+    # 2. Check if connection already exists
+    existing = query(
+        'SELECT id FROM connections WHERE (requester_id=%s AND receiver_id=%s) OR (requester_id=%s AND receiver_id=%s)',
+        (user['id'], target_id, target_id, user['id']),
+        one=True
+    )
+    if existing:
+        return jsonify({'status': 'error', 'message': 'Connection already exists or is pending'}), 400
+    
+    # 3. Create connection (auto-accepted for demo purposes)
+    res = execute(
+        'INSERT INTO connections (requester_id, receiver_id, status) VALUES (%s, %s, "accepted")',
+        (user['id'], target_id)
+    )
+    
+    if res > 0:
+        return jsonify({'status': 'success', 'message': 'Successfully connected!'})
+    elif res == -2:
+        return jsonify({'status': 'error', 'message': 'Connection already exists'}), 400
+    else:
+        return jsonify({'status': 'error', 'message': 'Database error. Ensure you have the local MySQL running.'}), 500
+
+
+@app.route('/api/disconnect/<int:target_id>', methods=['POST'])
+@login_required
+def api_disconnect(user, target_id):
+    user = normalise_user(user)
+    
+    # Delete where either user is the requester and the other is receiver
+    res = execute(
+        '''DELETE FROM connections 
+           WHERE (requester_id=%s AND receiver_id=%s) 
+              OR (requester_id=%s AND receiver_id=%s)''',
+        (user['id'], target_id, target_id, user['id'])
+    )
+    
+    if res >= 0:
+        return jsonify({'status': 'success', 'message': 'Connection removed.'})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+=======
     friends = conn_rows if conn_rows else DEMO_FRIENDS
     for f in friends:
         if not f.get("avatar_url"):
@@ -655,6 +859,7 @@ def network(user):
                 f"https://ui-avatars.com/api/?name={f['name'][0]}&background=random&rounded=true"
             )
     return render_template("network.html", user=user, friends=friends)
+>>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 
 
 @app.route("/market")

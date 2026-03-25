@@ -43,14 +43,27 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     color: var(--primary-green);
+    text-decoration: none;
+}
+
+.brand-logo-img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-text-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .logo-icon-bg {
     background-color: var(--primary-green);
     color: white;
-    width: 32px;
+    min-width: 32px;
     height: 32px;
     display: flex;
     justify-content: center;
@@ -517,7 +530,7 @@ body {
 .suggest-info { flex-grow: 1; }
 .suggest-name { font-size: 13px; font-weight: 600; }
 .suggest-title { font-size: 11px; color: var(--text-muted); }
-.connect-btn {
+.connect-btn, .sidebar-btn {
     background: none;
     border: 1.5px solid var(--primary-green);
     color: var(--primary-green);
@@ -529,7 +542,17 @@ body {
     white-space: nowrap;
     transition: all 0.2s;
 }
-.connect-btn:hover { background: var(--primary-green); color: #fff; }
+.connect-btn:hover, .connect-btn.sidebar-btn:hover { background: var(--primary-green); color: #fff; }
+
+.unfollow-btn.sidebar-btn {
+    border-color: #cbd5e1;
+    color: #94a3b8;
+}
+.unfollow-btn.sidebar-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
 
 /* ── Navbar link fix ─────────────────────────────────── */
 a.logo { text-decoration: none; }
@@ -860,6 +883,12 @@ a.logo { text-decoration: none; }
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .tractor-bg    { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
 .fertilizer-bg { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
@@ -981,3 +1010,6 @@ a.logo { text-decoration: none; }
     .market-hero { flex-direction: column; gap: 16px; text-align: center; }
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 }
+. r e m o v i n g  
+   o p a c i t y :   0 ;   t r a n s f o r m :   t r a n s l a t e X ( - 2 0 p x ) ;   t r a n s i t i o n :   a l l   0 . 3 s   e a s e ;    
+ 

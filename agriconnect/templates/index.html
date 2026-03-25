@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main class="main-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="card profile-card">
+                <div class="profile-banner"></div>
+                <div class="profile-info">
+                    <img src="{{ user.avatar_url }}" alt="User Avatar" class="profile-avatar">
+                    <h2 class="user-title">{{ user.full_name }}</h2>
+                    <p class="user-location"><i class="fa-solid fa-location-dot"></i> {{ user.location }}</p>
+                </div>
+                <div class="card-footer profile-stats">
+                    <span>Connections</span>
+                    <span class="stat-number">{{ user.connections }}</span>
+                </div>
+                <div style="padding: 0 20px 20px;">
+                    <a href="/profile/edit" class="btn-logout" style="background: #f8fafc; color: #334155; border-color: #cbd5e1; margin-bottom: 10px;"><i class="fa-regular fa-pen-to-square"></i> Edit Profile</a>
+                    <a href="/logout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                </div>
+            </div>
+            <div class="card weather-card">
+                <h3 class="weather-title"><i class="fa-solid fa-cloud-sun weather-icon"></i> Local Weather</h3>
+                <div class="weather-main">
+                    <div class="temp-box">
+                        <span class="temp">32°C</span>
+                        <span class="condition">Mostly Sunny</span>
+                    </div>
+                    <div class="weather-details">
+                        <p>Humidity: 65%</p>
+                        <p>Wind: 12 km/h</p>
+                        <p>Rain Chance: 10%</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Feed -->
+        <section class="feed">
+            <div class="card create-post-box">
+                <div class="create-post-top">
+                    <img src="{{ user.avatar_url }}" alt="User Avatar" class="post-avatar">
+                    <input type="text" class="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
+                    <input type="file" id="post-media-input" style="display:none" accept="image/*">
+                </div>
+                <!-- Image Preview -->
+                <div id="post-preview-container" style="display:none; padding: 10px 20px; position:relative;">
+                    <img id="post-preview-img" src="" alt="Preview" style="max-width:100%; border-radius:12px; max-height:300px; object-fit:cover;">
+                    <button id="remove-preview-btn" style="position:absolute; top:15px; right:25px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+                </div>
+                <div class="create-post-actions">
+                    <button class="action-btn" id="gallery-btn"><i class="fa-regular fa-image text-blue"></i> Gallery</button>
+                    <button class="btn-post" id="submit-post" style="margin-left: auto; background: var(--primary-green); color: white; border: none; padding: 6px 20px; border-radius: 20px; font-weight: 600; cursor: pointer;">Post</button>
+                </div>
+            </div>
+            <div class="feed-divider"><span>COMMUNITY FEED</span></div>
+            {% for post in posts %}
+            <div class="card post-card" data-post-id="{{ post.id }}">
+
+                <div class="post-header">
+                    <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
+                    <div class="post-meta">
+                        <h4 class="post-author">{{ post.author_name }}</h4>
+                        <p class="post-author-title">{{ post.author_title }}</p>
+                        <p class="post-time">{{ post.time_ago }}</p>
+                    </div>
+                    <button class="post-options"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+                <div class="post-content">
+                    <p>{{ post.content }}</p>
+                    {% if post.media_url %}
+                    <img src="{{ post.media_url }}" alt="Post Image" style="width:100%; border-radius:12px; margin-top:10px; max-height:450px; object-fit:cover;">
+                    {% endif %}
+                </div>
+                <div class="post-stats">
+                    <span class="likes-count">{{ post.likes }} Likes</span>
+                    <span class="comments-count">{{ post.comments }} Comments</span>
+                </div>
+                <div class="post-actions">
+                    <button class="post-action-btn like-btn"><i class="fa-regular fa-thumbs-up"></i> Helpful</button>
+                    <button class="post-action-btn comment-toggle-btn"><i class="fa-regular fa-comment"></i> Comment</button>
+                    <button class="post-action-btn share-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                </div>
+                <!-- Comment Section (Hidden by default) -->
+                <div class="comment-section" style="display:none; padding: 15px 20px; border-top: 1px solid var(--border-color); background: #fdfdfd;">
+                    <div class="comment-input-wrap" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <img src="{{ user.avatar_url }}" alt="" class="post-avatar" style="width:32px; height:32px;">
+                        <input type="text" class="comment-input" placeholder="Write a comment..." style="flex-grow:1; border:1px solid #e2e8f0; border-radius:20px; padding:0 15px; font-size:13px; outline:none;">
+                        <button class="btn-send-comment" style="background:var(--primary-green); color:white; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div class="comments-list">
+                        <!-- Comments will appear here -->
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <div class="card suggestion-card">
+                <h3 class="panel-heading">People You May Know</h3>
+                {% for friend in suggestions %}
+                <div class="suggest-item">
+                    <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="suggest-avatar">
+                    <div class="suggest-info">
+                        <p class="suggest-name">{{ friend.name }}</p>
+                        <p class="suggest-title">{{ friend.title }}</p>
+                    </div>
+                    <button class="connect-btn"><i class="fa-solid fa-plus"></i> Connect</button>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        const galleryBtn = document.getElementById('gallery-btn');
+        const mediaInput = document.getElementById('post-media-input');
+        const previewContainer = document.getElementById('post-preview-container');
+        const previewImg = document.getElementById('post-preview-img');
+        const removePreviewBtn = document.getElementById('remove-preview-btn');
+
+        galleryBtn.addEventListener('click', () => mediaInput.click());
+
+        mediaInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removePreviewBtn.addEventListener('click', () => {
+            mediaInput.value = '';
+            previewContainer.style.display = 'none';
+            previewImg.src = '';
+        });
+
+        document.getElementById('submit-post').addEventListener('click', async function() {
+            const input = document.querySelector('.post-input');
+            const content = input.value.trim();
+            const mediaFile = mediaInput.files[0];
+
+            if (!content && !mediaFile) return;
+
+            this.disabled = true;
+            this.textContent = 'Posting...';
+
+            // Use FormData for file upload
+            const formData = new FormData();
+            formData.append('content', content);
+            if (mediaFile) formData.append('media', mediaFile);
+
+            try {
+                const response = await fetch('/api/post/create', {
+                    method: 'POST',
+                    body: formData
+                    // No Content-Type header; fetch sets it automatically with the boundary for FormData
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const post = data.post;
+                    const divider = document.querySelector('.feed-divider');
+                    
+                    const mediaHtml = post.media_url ? `<img src="${post.media_url}" alt="Post Image" style="width:100%; border-radius:12px; margin-top:10px; max-height:450px; object-fit:cover;">` : '';
+
+                    const postHtml = `
+                        <div class="card post-card">
+                            <div class="post-header">
+                                <img src="${post.avatar_url}" alt="Author Avatar" class="post-avatar">
+                                <div class="post-meta">
+                                    <h4 class="post-author">${post.author_name}</h4>
+                                    <p class="post-author-title">${post.author_title}</p>
+                                    <p class="post-time">${post.time_ago}</p>
+                                </div>
+                                <button class="post-options"><i class="fa-solid fa-ellipsis"></i></button>
+                            </div>
+                            <div class="post-content">
+                                <p>${post.content}</p>
+                                ${mediaHtml}
+                            </div>
+                            <div class="post-stats">
+                                <span class="likes-count">0 Likes</span>
+                                <span class="comments-count">0 Comments</span>
+                            </div>
+                            <div class="post-actions">
+                                <button class="post-action-btn"><i class="fa-regular fa-thumbs-up"></i> Helpful</button>
+                                <button class="post-action-btn"><i class="fa-regular fa-comment"></i> Comment</button>
+                                <button class="post-action-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = postHtml;
+                    divider.after(tempDiv.firstElementChild);
+                    
+                    // Reset UI
+                    input.value = '';
+                    mediaInput.value = '';
+                    previewContainer.style.display = 'none';
+                    previewImg.src = '';
+                } else {
+                    alert(data.message || 'Error creating post');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error. Please try again.');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Post';
+            }
+        });
+        // --- Post Actions (Like, Comment, Share) ---
+        document.querySelector('.feed').addEventListener('click', async function(e) {
+            const card = e.target.closest('.post-card');
+            if (!card) return;
+            const postId = card.dataset.postId;
+
+            // 1. LIKE (Helpful)
+            const likeBtn = e.target.closest('.like-btn');
+            if (likeBtn) {
+                const icon = likeBtn.querySelector('i');
+                const likesSpan = card.querySelector('.likes-count');
+                
+                try {
+                    const resp = await fetch(`/api/post/like/${postId}`, { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.status === 'success') {
+                        likesSpan.textContent = `${data.likes_count} Likes`;
+                        if (data.is_liked) {
+                            icon.classList.remove('fa-regular');
+                            icon.classList.add('fa-solid');
+                            likeBtn.style.color = 'var(--primary-green)';
+                        } else {
+                            icon.classList.remove('fa-solid');
+                            icon.classList.add('fa-regular');
+                            likeBtn.style.color = '';
+                        }
+                    }
+                } catch (err) { console.error(err); }
+                return;
+            }
+
+            // 2. COMMENT TOGGLE
+            const commentToggleBtn = e.target.closest('.comment-toggle-btn');
+            if (commentToggleBtn) {
+                const section = card.querySelector('.comment-section');
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                if (section.style.display === 'block') {
+                    section.querySelector('.comment-input').focus();
+                }
+                return;
+            }
+
+            // 3. SEND COMMENT
+            const sendCommentBtn = e.target.closest('.btn-send-comment');
+            if (sendCommentBtn) {
+                const input = card.querySelector('.comment-input');
+                const content = input.value.trim();
+                const list = card.querySelector('.comments-list');
+                const countSpan = card.querySelector('.comments-count');
+
+                if (!content) return;
+                sendCommentBtn.disabled = true;
+
+                try {
+                    const resp = await fetch(`/api/post/comment/${postId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content })
+                    });
+                    const data = await resp.json();
+                    if (data.status === 'success') {
+                        const c = data.comment;
+                        const commentHtml = `
+                            <div class="comment-item" style="display:flex; gap:10px; margin-bottom:12px;">
+                                <img src="${c.avatar_url}" alt="" class="post-avatar" style="width:28px; height:28px;">
+                                <div style="background:#f1f5f9; padding:8px 12px; border-radius:15px; flex-grow:1;">
+                                    <p style="font-size:12px; font-weight:700; margin-bottom:2px;">${c.author_name}</p>
+                                    <p style="font-size:13px; color:#334155;">${c.content}</p>
+                                </div>
+                            </div>
+                        `;
+                        list.insertAdjacentHTML('beforeend', commentHtml);
+                        input.value = '';
+                        // Update UI count
+                        const currentCount = parseInt(countSpan.textContent) || 0;
+                        countSpan.textContent = `${currentCount + 1} Comments`;
+                    }
+                } catch (err) { console.error(err); }
+                finally { sendCommentBtn.disabled = false; }
+                return;
+            }
+
+            // 4. SHARE
+            const shareBtn = e.target.closest('.share-btn');
+            if (shareBtn) {
+                const shareData = {
+                    title: 'AgriConnect Post',
+                    text: card.querySelector('.post-content p').textContent,
+                    url: window.location.href
+                };
+                if (navigator.share) {
+                    navigator.share(shareData);
+                } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard! 📋');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

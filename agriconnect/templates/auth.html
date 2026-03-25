@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect – Join the Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-split">
+        <!-- Brand Panel -->
+        <div class="auth-brand">
+            <div class="brand-inner">
+                <div class="brand-logo">
+                    <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                    <span>AgriConnect</span>
+                </div>
+                <h1 class="brand-headline" id="brand-headline">
+                    {% if mode == 'register' %}Join India's Farmer Community{% else %}Grow Together.<br>Farm Smarter.{% endif %}
+                </h1>
+                <p class="brand-sub" id="brand-sub">
+                    {% if mode == 'register' %}Share updates, discover market listings, chat with other farmers, and grow your farming network – all in one place.{% else %}The social network built for farmers. Connect with thousands of farming communities, share knowledge, buy & sell in the market.{% endif %}
+                </p>
+                <div id="brand-dynamic-content">
+                    {% if mode == 'register' %}
+                    <ul class="brand-features" id="brand-features">
+                        <li><i class="fa-solid fa-check-circle"></i> Free to join</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Buy &amp; Sell in the Market</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Connect with nearby farmers</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Get local weather updates</li>
+                    </ul>
+                    {% else %}
+                    <div class="brand-stats" id="brand-stats">
+                        <div class="bstat"><strong>50K+</strong><span>Farmers</span></div>
+                        <div class="bstat"><strong>200+</strong><span>Districts</span></div>
+                        <div class="bstat"><strong>18</strong><span>Crops Listed</span></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Form Panel -->
+        <div class="auth-form-panel">
+            <div class="auth-card">
+                
+                <div class="auth-slider-wrapper">
+                    <div class="auth-slider {{ 'show-register' if mode == 'register' else '' }}" id="auth-slider">
+                        
+                        <!-- Login Slide -->
+                        <div class="auth-slide login-slide">
+                            <h2 class="auth-title">Welcome Back 👋</h2>
+                            <p class="auth-subtitle">Log in to your AgriConnect account</p>
+
+                            {% if mode == 'login' and error %}
+                            <div class="auth-alert error">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" action="/login" id="login-form">
+                                <div class="input-group">
+                                    <label for="login_email">Email or Username</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-regular fa-envelope input-icon"></i>
+                                        <input type="text" id="login_email" name="email" placeholder="you@example.com" required autocomplete="email" value="{{ request.form.get('email', '') }}">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="login_password">Password</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-lock input-icon"></i>
+                                        <input type="password" id="login_password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                                        <button type="button" class="toggle-pw" onclick="togglePw('login_password', this)">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="submit" class="auth-btn">
+                                    <i class="fa-solid fa-right-to-bracket"></i> Login
+                                </button>
+                            </form>
+                            <p class="auth-switch">New to AgriConnect? <a href="#" onclick="switchMode('register'); return false;">Create an account</a></p>
+                        </div>
+                        
+                        <!-- Register Slide -->
+                        <div class="auth-slide register-slide">
+                            <h2 class="auth-title">Create Account 🌾</h2>
+                            <p class="auth-subtitle">Start your AgriConnect journey</p>
+
+                            {% if mode == 'register' and error %}
+                            <div class="auth-alert error">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" action="/register" id="register-form">
+                                <div class="input-row">
+                                    <div class="input-group">
+                                        <label for="full_name">Full Name</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-regular fa-user input-icon"></i>
+                                            <input type="text" id="full_name" name="full_name" placeholder="Rajesh Kumar" required value="{{ request.form.get('full_name', '') }}">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="username">Username</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-at input-icon"></i>
+                                            <input type="text" id="username" name="username" placeholder="rajesh_farmer" required value="{{ request.form.get('username', '') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="email">Email Address</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-regular fa-envelope input-icon"></i>
+                                        <input type="email" id="email" name="email" placeholder="you@example.com" required value="{{ request.form.get('email', '') }}">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="title">Farm / Profession</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-wheat-awn input-icon"></i>
+                                        <input type="text" id="title" name="title" placeholder="e.g. Wheat Farmer" value="{{ request.form.get('title', '') }}">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="location">Location</label>
+                                    <div class="input-wrap">
+                                        <i class="fa-solid fa-location-dot input-icon"></i>
+                                        <input type="text" id="location" name="location" placeholder="e.g. Punjab, India" value="{{ request.form.get('location', '') }}">
+                                    </div>
+                                </div>
+                                <div class="input-row">
+                                    <div class="input-group">
+                                        <label for="password">Password</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-lock input-icon"></i>
+                                            <input type="password" id="password" name="password" placeholder="min 6 chars" required>
+                                            <button type="button" class="toggle-pw" onclick="togglePw('password', this)">
+                                                <i class="fa-regular fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="confirm_password">Confirm</label>
+                                        <div class="input-wrap">
+                                            <i class="fa-solid fa-lock input-icon"></i>
+                                            <input type="password" id="confirm_password" name="confirm_password" placeholder="repeat" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="auth-btn">
+                                    <i class="fa-solid fa-user-plus"></i> Create Account
+                                </button>
+                            </form>
+                            <p class="auth-switch">Already have an account? <a href="#" onclick="switchMode('login'); return false;">Log in</a></p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePw(id, btn) {
+            const input = document.getElementById(id);
+            const icon  = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        function switchMode(mode) {
+            const slider = document.getElementById('auth-slider');
+            const headline = document.getElementById('brand-headline');
+            const sub = document.getElementById('brand-sub');
+            const dynamicContent = document.getElementById('brand-dynamic-content');
+
+            if (mode === 'register') {
+                slider.classList.add('show-register');
+                window.history.pushState({}, '', '/register');
+                
+                // Update brand side elegantly
+                headline.innerHTML = "Join India's Farmer Community";
+                sub.innerHTML = "Share updates, discover market listings, chat with other farmers, and grow your farming network – all in one place.";
+                dynamicContent.innerHTML = `
+                    <ul class="brand-features" id="brand-features">
+                        <li><i class="fa-solid fa-check-circle"></i> Free to join</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Buy &amp; Sell in the Market</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Connect with nearby farmers</li>
+                        <li><i class="fa-solid fa-check-circle"></i> Get local weather updates</li>
+                    </ul>
+                `;
+            } else {
+                slider.classList.remove('show-register');
+                window.history.pushState({}, '', '/login');
+                
+                // Update brand side elegantly
+                headline.innerHTML = "Grow Together.<br>Farm Smarter.";
+                sub.innerHTML = "The social network built for farmers. Connect with thousands of farming communities, share knowledge, buy & sell in the market.";
+                dynamicContent.innerHTML = `
+                    <div class="brand-stats" id="brand-stats">
+                        <div class="bstat"><strong>50K+</strong><span>Farmers</span></div>
+                        <div class="bstat"><strong>200+</strong><span>Districts</span></div>
+                        <div class="bstat"><strong>18</strong><span>Crops Listed</span></div>
+                    </div>
+                `;
+            }
+            
+            // Clear any alerts when switching manually
+            document.querySelectorAll('.auth-alert').forEach(el => el.style.display = 'none');
+        }
+
+        // Handle user clicking system "back/forward" buttons to sync slider
+        window.addEventListener('popstate', () => {
+            const isRegister = window.location.pathname.includes('/register');
+            switchMode(isRegister ? 'register' : 'login');
+        });
+    </script>
+</body>
+</html>

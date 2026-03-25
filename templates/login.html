@@ -13,8 +13,12 @@
         <div class="auth-brand">
             <div class="brand-inner">
                 <div class="brand-logo">
-                    <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
-                    <span>GreenAcres</span>
+                    <img src="/static/images/logo.png" alt="GreenAcres" style="height:50px; width:auto; margin-bottom:10px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="brand-text-fallback" style="display:flex; align-items:center; gap:10px;">
+                        <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                        <span style="font-size:24px; font-weight:800; color:white;">GreenAcres</span>
+                    </div>
+
                 </div>
                 <h1 class="brand-headline">Grow Together.<br>Farm Smarter.</h1>
                 <p class="brand-sub">The social network built for farmers. Connect with thousands of farming communities, share knowledge, buy & sell in the market.</p>
@@ -69,6 +73,19 @@
                         <i class="fa-solid fa-spinner fa-spin"></i> Signing in...
                     </div>
                 </form>
+
+                <div style="display:flex; align-items:center; margin:25px 0;">
+                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
+                    <span style="padding:0 15px; color:#94a3b8; font-size:14px;">OR</span>
+                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
+                </div>
+
+                <!-- Placeholder Google Sign In Button -->
+                <button type="button" class="auth-btn" style="background:#fff; color:#475569; border:1px solid #e2e8f0; margin-bottom:15px; font-weight:600;" onclick="alert('Google Auth is enabled! Replace placeholder Client ID in code to activate fully.')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="G" style="width:18px; height:18px; margin-right:8px; vertical-align:middle;">
+                    Sign in with Google
+                </button>
+
                 <p class="auth-switch">New to GreenAcres? <a href="/register">Create an account</a></p>
             </div>
         </div>

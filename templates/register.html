@@ -22,8 +22,12 @@
         <div class="auth-brand">
             <div class="brand-inner">
                 <div class="brand-logo">
-                    <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
-                    <span>GreenAcres</span>
+                    <img src="/static/images/logo.png" alt="GreenAcres" style="height:50px; width:auto; margin-bottom:10px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="brand-text-fallback" style="display:flex; align-items:center; gap:10px;">
+                        <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                        <span style="font-size:24px; font-weight:800; color:white;">GreenAcres</span>
+                    </div>
+
                 </div>
                 <h1 class="brand-headline">Join India's Farmer Community</h1>
                 <p class="brand-sub">Share updates, discover market listings, chat with other farmers, and grow your farming network – all in one place.</p>
@@ -84,10 +88,15 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <label for="location">Location (State, District)</label>
+                        <label for="location" style="display:flex; justify-content:space-between; align-items:center;">
+                            Location (State, District)
+                            <button type="button" id="btn-get-location" style="background:none; border:none; color:var(--primary-green); font-size:12px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-location-crosshairs"></i> Detect Location</button>
+                        </label>
                         <div class="input-wrap">
                             <i class="fa-solid fa-location-dot input-icon"></i>
                             <input type="text" id="location" name="location" placeholder="e.g. Punjab, India">
+                            <input type="hidden" id="lat" name="lat">
+                            <input type="hidden" id="lon" name="lon">
                         </div>
                     </div>
                     <div class="input-row">
@@ -119,6 +128,19 @@
                         <i class="fa-solid fa-spinner fa-spin"></i> Creating account...
                     </div>
                 </form>
+
+                <div style="display:flex; align-items:center; margin:25px 0;">
+                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
+                    <span style="padding:0 15px; color:#94a3b8; font-size:14px;">OR</span>
+                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
+                </div>
+
+                <!-- Placeholder Google Sign In Button -->
+                <button type="button" class="auth-btn" style="background:#fff; color:#475569; border:1px solid #e2e8f0; margin-bottom:15px; font-weight:600;" onclick="alert('Google Auth is enabled! Replace placeholder Client ID in code to activate fully.')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="G" style="width:18px; height:18px; margin-right:8px; vertical-align:middle;">
+                    Sign up with Google
+                </button>
+
                 <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
             </div>
         </div>

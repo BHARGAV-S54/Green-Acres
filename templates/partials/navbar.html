@@ -3,37 +3,35 @@
     <div class="nav-container">
 
         <a href="/" class="logo" id="logo-link">
-            <div class="logo-icon-bg">
-                <i class="fa-solid fa-tractor logo-icon"></i>
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="GreenAcres" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-text-wrap">
+                <div class="logo-icon-bg">
+                    <i class="fa-solid fa-tractor logo-icon"></i>
+                </div>
+                <span class="logo-text">GreenAcres</span>
             </div>
-            <span class="logo-text">GreenAcres</span>
+
         </a>
 
-        <div class="search-bar">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search farmers, crops, tools..." aria-label="Search">
-        </div>
+
 
         <ul class="nav-icons">
-            <li id="nav-home"     title="Home"     onclick="window.location='/'">
+            <li id="nav-home" title="Home" onclick="window.location='/'">
                 <i class="fa-solid fa-house"></i>
                 <span class="nav-label">Home</span>
             </li>
-            <li id="nav-network"  title="Network"  onclick="window.location='/network'">
+            <li id="nav-network" title="Network" onclick="window.location='/network'">
                 <i class="fa-solid fa-user-group"></i>
                 <span class="nav-label">Network</span>
             </li>
-            <li id="nav-market"   title="Market"   onclick="window.location='/market'">
+            <li id="nav-market" title="Market" onclick="window.location='/market'">
                 <i class="fa-solid fa-store"></i>
                 <span class="nav-label">Market</span>
             </li>
-            <li id="nav-messages" title="Messages" onclick="window.location='/network'">
-                <i class="fa-regular fa-comment"></i>
-                <span class="nav-label">Messages</span>
-            </li>
-            <li id="nav-notif"    title="Notifications">
-                <i class="fa-regular fa-bell"></i>
-                <span class="nav-label">Alerts</span>
+
+            <li id="nav-inbox" title="Inbox" onclick="window.location='/inbox'">
+                <i class="fa-solid fa-inbox"></i>
+                <span class="nav-label">Inbox</span>
             </li>
         </ul>
 
@@ -48,9 +46,7 @@
                     <p>{{ user.full_name }}</p>
                     <small>{{ user.email if user.email else user.username }}</small>
                 </div>
-                <a href="#" class="dropdown-item">
-                    <i class="fa-regular fa-user"></i> My Profile
-                </a>
+
                 <a href="#" class="dropdown-item">
                     <i class="fa-solid fa-gear"></i> Settings
                 </a>
@@ -65,21 +61,21 @@
 
 <script>
     // Highlight active nav item based on current path
-    (function() {
+    (function () {
         const path = window.location.pathname;
-        if (path === '/')           document.getElementById('nav-home')?.classList.add('active');
-        if (path === '/network')    document.getElementById('nav-network')?.classList.add('active');
-        if (path === '/market')     document.getElementById('nav-market')?.classList.add('active');
+        if (path === '/') document.getElementById('nav-home')?.classList.add('active');
+        if (path === '/network') document.getElementById('nav-network')?.classList.add('active');
+        if (path === '/market') document.getElementById('nav-market')?.classList.add('active');
+        if (path === '/inbox') document.getElementById('nav-inbox')?.classList.add('active');
     })();
 
     function toggleProfileDropdown(e) {
         e.stopPropagation();
         document.getElementById('profile-dropdown').classList.toggle('open');
     }
-    document.addEventListener('click', function() {
+    document.addEventListener('click', function () {
         document.getElementById('profile-dropdown')?.classList.remove('open');
     });
-
     async function logout() {
         try {
             await fetch('/api/logout', { method: 'POST' });
@@ -87,3 +83,4 @@
         window.location.href = '/login';
     }
 </script>
+

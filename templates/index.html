@@ -26,20 +26,6 @@
                     <span class="stat-number">{{ user.connections }}</span>
                 </div>
             </div>
-            <div class="card weather-card">
-                <h3 class="weather-title"><i class="fa-solid fa-cloud-sun weather-icon"></i> Local Weather</h3>
-                <div class="weather-main">
-                    <div class="temp-box">
-                        <span class="temp">32°C</span>
-                        <span class="condition">Mostly Sunny</span>
-                    </div>
-                    <div class="weather-details">
-                        <p>Humidity: 65%</p>
-                        <p>Wind: 12 km/h</p>
-                        <p>Rain Chance: 10%</p>
-                    </div>
-                </div>
-            </div>
         </aside>
 
         <!-- Main Feed -->
@@ -64,9 +50,13 @@
             {% for post in posts %}
             <div class="card post-card" data-post-id="{{ post.id }}">
                 <div class="post-header">
-                    <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
+                    <a href="/profile/{{ post.user_id }}">
+                        <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
+                    </a>
                     <div class="post-meta">
-                        <h4 class="post-author">{{ post.author_name }}</h4>
+                        <a href="/profile/{{ post.user_id }}" style="text-decoration:none;">
+                            <h4 class="post-author">{{ post.author_name }}</h4>
+                        </a>
                         <p class="post-author-title">{{ post.author_title }}</p>
                         <p class="post-time">{{ post.time_ago }}</p>
                     </div>
@@ -102,15 +92,37 @@
 
         <!-- Right Panel -->
         <aside class="right-panel">
+            <!-- Local Weather Widget -->
+            <div class="card suggestion-card" id="weather-widget">
+                <h3 class="panel-heading">Local Weather forecast ⛅</h3>
+                <div style="text-align:center; padding: 15px 0;">
+                    <div id="weather-loading" style="color:var(--text-muted); font-size:14px;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Detecting your location...
+                    </div>
+                    <div id="weather-data" style="display:none;">
+                        <h2 id="w-temp" style="font-size:32px; color:var(--text-dark); margin:0;">--°C</h2>
+                        <p id="w-desc" style="font-size:14px; font-weight:500; color:var(--text-muted); margin:5px 0;">Getting forecast...</p>
+                        <div style="display:flex; justify-content:center; gap:20px; font-size:12px; color:var(--text-light); margin-top:10px;">
+                            <span id="w-wind"><i class="fa-solid fa-wind"></i> -- km/h</span>
+                            <span id="w-humid"><i class="fa-solid fa-droplet"></i> --%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card suggestion-card">
                 <h3 class="panel-heading">Grow Your Network 🌾</h3>
                 
                 <!-- True Suggestions -->
                 {% for person in suggestions %}
                 <div class="suggest-item" data-id="{{ person.id }}">
-                    <img src="{{ person.avatar_url }}" alt="{{ person.name }}" class="suggest-avatar">
+                    <a href="/profile/{{ person.id }}">
+                        <img src="{{ person.avatar_url }}" alt="{{ person.name }}" class="suggest-avatar">
+                    </a>
                     <div class="suggest-info">
-                        <p class="suggest-name">{{ person.name }}</p>
+                        <a href="/profile/{{ person.id }}" style="text-decoration:none; color:inherit;">
+                            <p class="suggest-name">{{ person.name }}</p>
+                        </a>
                         <p class="suggest-title">{{ person.title }}</p>
                     </div>
                     <button class="connect-btn sidebar-btn" title="Connect"><i class="fa-solid fa-plus"></i></button>
@@ -124,9 +136,13 @@
                 </div>
                 {% for friend in friends %}
                 <div class="suggest-item" data-id="{{ friend.id }}">
-                    <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="suggest-avatar">
+                    <a href="/profile/{{ friend.id }}">
+                        <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="suggest-avatar">
+                    </a>
                     <div class="suggest-info">
-                        <p class="suggest-name">{{ friend.name }}</p>
+                        <a href="/profile/{{ friend.id }}" style="text-decoration:none; color:inherit;">
+                            <p class="suggest-name">{{ friend.name }}</p>
+                        </a>
                         <p class="suggest-title">{{ friend.title }}</p>
                     </div>
                     <button class="unfollow-btn sidebar-btn" title="Unfollow"><i class="fa-solid fa-user-xmark"></i></button>
@@ -320,6 +336,50 @@
                 alert('Request failed. Please check your connection.');
             }
             finally { btn.disabled = false; btn.style.opacity = '1'; }
+        });
+
+        // Real-Time Local Weather Implementation (Open-Meteo Free API)
+        document.addEventListener('DOMContentLoaded', () => {
+            const loading = document.getElementById('weather-loading');
+            const dataDiv = document.getElementById('weather-data');
+            
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    try {
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`;
+                        const resp = await fetch(url);
+                        const weather = await resp.json();
+                        
+                        if(weather.current) {
+                            document.getElementById('w-temp').innerText = weather.current.temperature_2m + '°C';
+                            document.getElementById('w-wind').innerHTML = `<i class="fa-solid fa-wind"></i> ${weather.current.wind_speed_10m} km/h`;
+                            document.getElementById('w-humid').innerHTML = `<i class="fa-solid fa-droplet"></i> ${weather.current.relative_humidity_2m}%`;
+                            
+                            const code = weather.current.weather_code;
+                            let desc = "Clear skies ☀️";
+                            if(code >= 1 && code <= 3) desc = "Partly cloudy ⛅";
+                            if(code >= 45 && code <= 48) desc = "Foggy 🌫️";
+                            if(code >= 51 && code <= 67) desc = "Rainy 🌧️";
+                            if(code >= 71 && code <= 77) desc = "Snow ❄️";
+                            if(code >= 95) desc = "Thunderstorm 🌩️";
+                            
+                            document.getElementById('w-desc').innerText = desc;
+                            
+                            loading.style.display = 'none';
+                            dataDiv.style.display = 'block';
+                        }
+                    } catch(e) {
+                        loading.innerText = 'Weather service unavailable.';
+                    }
+                }, err => {
+                    loading.innerText = 'Please allow location to see local weather.';
+                });
+            } else {
+                loading.innerText = 'Geolocation unsupported by browser.';
+            }
         });
     </script>
 </body>

@@ -22,39 +22,27 @@ import mysql.connector
 # ──────────────────────────────────────────────
 app = Flask(__name__)
 
-<<<<<<< HEAD
-SECRET_KEY    = os.environ.get('GREENACRES_SECRET', 'greenacres-jwt-secret-2026-change-me')
-JWT_ALGORITHM = 'HS256'
-JWT_EXP_HOURS = 24          # token lives for 24 hours
-COOKIE_NAME   = 'ga_token'  # HTTP-only cookie name
-
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-=======
 SECRET_KEY = os.environ.get("AGRICONNECT_SECRET", "agri-jwt-secret-2024-change-me")
 JWT_ALGORITHM = "HS256"
 JWT_EXP_HOURS = 24  # token lives for 24 hours
 COOKIE_NAME = "ac_token"  # HTTP-only cookie name
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
+MARKET_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'market')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
+
 
 # ──────────────────────────────────────────────
 #  Database helpers
 # ──────────────────────────────────────────────
 DB_CONFIG = {
-<<<<<<< HEAD
-    'host':     '127.0.0.1',
-    'user':     'root',
-    'password': 'root',
-    'database': 'agriconnect_db',
-    'charset':  'utf8mb4',
-=======
     "host": "127.0.0.1",
     "user": "root",
     "password": "root",
     "database": "agriconnect_db",
     "charset": "utf8mb4",
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
 }
 
 
@@ -180,13 +168,6 @@ def login_required(f):
 #  Fallback data  (used when DB is unavailable)
 # ──────────────────────────────────────────────
 DEMO_USER = {
-<<<<<<< HEAD
-    'id': 0, 'full_name': 'Demo Farmer', 'username': 'demo',
-    'email': 'demo@greenacres.in',
-    'title': 'Organic Farmer & Agri-Tech Enthusiast',
-    'location': 'Andhra Pradesh, India', 'connections': 342,
-    'avatar_url': 'https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true',
-=======
     "id": 0,
     "full_name": "Demo Farmer",
     "username": "demo",
@@ -195,7 +176,7 @@ DEMO_USER = {
     "location": "Andhra Pradesh, India",
     "connections": 342,
     "avatar_url": "https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true",
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
 }
 
 DEMO_POSTS = [
@@ -270,6 +251,59 @@ DEMO_SUGGESTIONS = [
     },
 ]
 
+DEMO_LISTINGS = [
+    {
+        "category": "tractor", "listing_type": "rent", "title": "Mahindra JIVO 245 DI Tractor",
+        "seller_name": "Ravi Shankar", "seller_location": "Punjab", "price": 1800, "price_unit": "/day",
+        "image_url": "/static/agri/Mahindra JIVO 245 DI Tractor.avif", "description": "High performance compact tractor for small farms. 4WD, 24HP, 2023 Model."
+    },
+    {
+        "category": "tractor", "listing_type": "sell", "title": "Sonalika GT 20 Mini Tractor",
+        "seller_name": "Anand Kumar", "seller_location": "Haryana", "price": 340000, "price_unit": "",
+        "image_url": "/static/agri/Sonalika GT 20 Mini Tractor.jpg", "description": "2WD mini tractor in good condition. 20HP engine."
+    },
+    {
+        "category": "fertilizer", "listing_type": "sell", "title": "Vermicompost Fertilizer (50kg)",
+        "seller_name": "GreenEarth Farms", "seller_location": "UP", "price": 420, "price_unit": "/bag",
+        "image_url": "/static/agri/Vermicompost Fertilizer (50kg).jpg", "description": "100% Organic vermicompost for better soil health."
+    },
+    {
+        "category": "fertilizer", "listing_type": "sell", "title": "DAP Fertilizer (50kg)",
+        "seller_name": "Kisaan Store", "seller_location": "MP", "price": 1350, "price_unit": "/bag",
+        "image_url": "/static/agri/DAP Fertilizer (50kg.jpg", "description": "NPK Rich fertilizer for vigorous crop growth."
+    },
+    {
+        "category": "ghee", "listing_type": "sell", "title": "Pure Desi Cow Ghee (1L)",
+        "seller_name": "Gopal Dairy", "seller_location": "Gujarat", "price": 850, "price_unit": "/litre",
+        "image_url": "/static/agri/Pure Desi Cow Ghee (1L).webp", "description": "Traditional A2 Cow Ghee. No additives, purely handcrafted."
+    },
+    {
+        "category": "ghee", "listing_type": "sell", "title": "Buffalo Ghee (500ml Jar)",
+        "seller_name": "Farm Fresh", "seller_location": "Rajasthan", "price": 480, "price_unit": "/jar",
+        "image_url": "/static/agri/Buffalo Ghee (500ml Jar).png", "description": "Premium Buffalo Ghee. Rich in nutrients and flavor."
+    },
+    {
+        "category": "grain", "listing_type": "sell", "title": "Premium Wheat (Sharbati) 1 Quintal",
+        "seller_name": "Rajesh Kumar", "seller_location": "Punjab", "price": 2200, "price_unit": "/quintal",
+        "image_url": "/static/agri/Premium Wheat (Sharbati) 1 Quintal.jpg", "description": "Grade A Sharbati wheat, clean and high quality."
+    },
+    {
+        "category": "grain", "listing_type": "sell", "title": "Basmati Rice (Long Grain) 50kg",
+        "seller_name": "Mohan Das", "seller_location": "UP", "price": 4800, "price_unit": "/50kg",
+        "image_url": "/static/agri/Basmati Rice (Long Grain) 50kg.jpg", "description": "Aged aromatic long grain basmati rice."
+    },
+    {
+        "category": "crop", "listing_type": "sell", "title": "Fresh Tomato (Desi Hybrid) 10kg",
+        "seller_name": "Suresh Farms", "seller_location": "Andhra Pradesh", "price": 320, "price_unit": "/10kg",
+        "image_url": "/static/agri/Fresh Tomato (Desi Hybrid) 10kg.jpg", "description": "Freshly harvested pesticide-free tomatoes."
+    },
+    {
+        "category": "crop", "listing_type": "sell", "title": "Red Onion 50kg Bag",
+        "seller_name": "Kisaan Crop Co", "seller_location": "Maharashtra", "price": 1100, "price_unit": "/50kg",
+        "image_url": "/static/agri/Red Onion 50kg Bag.jpg", "description": "Grade A red onions, ready for wholesale."
+    }
+]
+
 
 def normalise_user(u: dict) -> dict:
     """Ensure avatar_url is always set."""
@@ -329,14 +363,11 @@ def login_post():
     )
 
     if user is None:
-<<<<<<< HEAD
-        if email_or_user in ('demo@greenacres.in', 'demo_farmer') and password == 'farmer123':
-=======
         if (
             email_or_user in ("demo@agriconnect.in", "demo_farmer")
             and password == "farmer123"
         ):
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
             user = DEMO_USER.copy()
             token = create_token(0, "demo_farmer")
             resp = make_response(redirect("/"))
@@ -666,7 +697,6 @@ def api_logout():
 def index(user):
     user = normalise_user(user)
     posts = load_posts_db()
-<<<<<<< HEAD
     
     # 1. Fetch current friends (accepted connections)
     friends = query(
@@ -754,11 +784,6 @@ def api_comment_post(user, post_id):
         execute('UPDATE posts SET comments = comments + 1 WHERE id=%s', (post_id,))
         return jsonify({'status': 'success', 'comment': {'author_name': user['full_name'], 'avatar_url': user['avatar_url'], 'content': content}})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
-=======
-    return render_template(
-        "index.html", user=user, posts=posts, suggestions=DEMO_SUGGESTIONS
-    )
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
 
 
 @app.route("/network")
@@ -776,7 +801,6 @@ def network(user):
            LIMIT 30""",
         (user["id"], user["id"], user["id"]),
     )
-<<<<<<< HEAD
     friends = conn_rows if conn_rows else []
     
     # Fetch suggestions (users not connected)
@@ -851,23 +875,187 @@ def api_disconnect(user, target_id):
         return jsonify({'status': 'success', 'message': 'Connection removed.'})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
 
-=======
-    friends = conn_rows if conn_rows else DEMO_FRIENDS
-    for f in friends:
-        if not f.get("avatar_url"):
-            f["avatar_url"] = (
-                f"https://ui-avatars.com/api/?name={f['name'][0]}&background=random&rounded=true"
-            )
-    return render_template("network.html", user=user, friends=friends)
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
-
 
 @app.route("/market")
 @login_required
 def market(user):
     user = normalise_user(user)
-    return render_template("market.html", user=user)
+    
+    # Fetch active listings from DB
+    listings = query("""
+        SELECT l.*, u.full_name AS seller_name, u.location AS seller_location
+        FROM market_listings l
+        JOIN users u ON l.seller_id = u.id
+        WHERE l.status = 'active'
+        ORDER BY l.created_at DESC
+    """)
+    
+    # Map demo catalog to auto-heal seed data lacking images
+    demo_catalog = {d['title']: d for d in DEMO_LISTINGS}
+    for l in listings:
+        if not l.get('image_url') and l['title'] in demo_catalog:
+            l['image_url'] = demo_catalog[l['title']]['image_url']
+        if not l.get('description') and l['title'] in demo_catalog:
+            l['description'] = demo_catalog[l['title']]['description']
+
+    # Combine real listings with remaining demo data for full UI
+    existing_titles = {l['title'] for l in listings}
+    unique_demos = [d for d in DEMO_LISTINGS if d['title'] not in existing_titles]
+    
+    all_items = listings + unique_demos
+    
+    return render_template("market.html", user=user, listings=all_items)
+
+
+@app.route("/api/market/create", methods=["POST"])
+@login_required
+def api_create_listing(user):
+    user = normalise_user(user)
+    
+    category = request.form.get("category")
+    listing_type = request.form.get("listing_type")
+    title = request.form.get("title")
+    price = request.form.get("price")
+    price_unit = request.form.get("price_unit", "")
+    description = request.form.get("description", "")
+    contact_phone = request.form.get("contact_phone", "")
+    image = request.files.get("image")
+
+    if not all([category, listing_type, title, price]):
+        return jsonify({"status": "error", "message": "Missing required fields"}), 400
+
+    image_url = ""
+    if image and image.filename:
+        filename = f"{uuid.uuid4()}_{image.filename}"
+        save_path = os.path.join(MARKET_UPLOAD_FOLDER, filename)
+        image.save(save_path)
+        image_url = f"/static/uploads/market/{filename}"
+
+    res = execute(
+        """INSERT INTO market_listings 
+           (seller_id, title, description, category, listing_type, price, price_unit, image_url, location, contact_phone)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        (user['id'], title, description, category, listing_type, price, price_unit, image_url, user['location'], contact_phone)
+    )
+
+    if res > 0:
+        return jsonify({"status": "success", "message": "Listing created", "listing_id": res})
+    return jsonify({"status": "error", "message": "Database error"}), 500
+
+
+@app.route("/api/market/book/<int:listing_id>", methods=["POST"])
+@login_required
+def api_book_listing(user, listing_id):
+    user = normalise_user(user)
+
+    listing = query("SELECT seller_id, title FROM market_listings WHERE id=%s", (listing_id,), one=True)
+    if not listing:
+        return jsonify({"status": "error", "message": "Listing not found"}), 404
+        
+    if listing['seller_id'] == user['id']:
+        return jsonify({"status": "error", "message": "You cannot book your own listing"}), 400
+
+    # Ensure not already booked pending
+    existing = query("SELECT id FROM market_bookings WHERE buyer_id=%s AND listing_id=%s AND status='pending'", 
+                     (user['id'], listing_id), one=True)
+    if existing:
+        return jsonify({"status": "error", "message": "You already have a pending request for this item"}), 400
+
+    res = execute(
+        "INSERT INTO market_bookings (buyer_id, seller_id, listing_id) VALUES (%s, %s, %s)",
+        (user['id'], listing['seller_id'], listing_id)
+    )
+
+    if res > 0:
+        return jsonify({"status": "success", "message": f"Successfully requested {listing['title']}!"})
+    return jsonify({"status": "error", "message": "Database error"}), 500
+
+
+@app.route("/api/market/booking/<int:booking_id>/<action>", methods=["POST"])
+@login_required
+def api_update_booking(user, booking_id, action):
+    user = normalise_user(user)
+    
+    if action not in ['accept', 'reject']:
+        return jsonify({"status": "error", "message": "Invalid action"}), 400
+
+    booking = query("SELECT seller_id FROM market_bookings WHERE id=%s", (booking_id,), one=True)
+    if not booking or booking['seller_id'] != user['id']:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    status_str = "accepted" if action == "accept" else "rejected"
+    res = execute("UPDATE market_bookings SET status=%s WHERE id=%s", (status_str, booking_id))
+    
+    if res >= 0:
+        return jsonify({"status": "success", "message": f"Booking {status_str}."})
+    return jsonify({"status": "error", "message": "Database error"}), 500
+
+
+@app.route("/inbox")
+@login_required
+def inbox(user):
+    user = normalise_user(user)
+    
+    # Received requests (User is seller)
+    received = query("""
+        SELECT b.id, b.status, b.created_at, 
+               l.title AS item_title, l.price, l.price_unit, l.image_url,
+               u.full_name AS buyer_name, u.location AS buyer_location
+        FROM market_bookings b
+        JOIN market_listings l ON b.listing_id = l.id
+        JOIN users u ON b.buyer_id = u.id
+        WHERE b.seller_id = %s
+        ORDER BY b.created_at DESC
+    """, (user['id'],))
+    
+    # Sent requests (User is buyer)
+    sent = query("""
+        SELECT b.id, b.status, b.created_at, 
+               l.title AS item_title, l.price, l.price_unit, l.image_url, l.contact_phone,
+               u.full_name AS seller_name
+        FROM market_bookings b
+        JOIN market_listings l ON b.listing_id = l.id
+        JOIN users u ON b.seller_id = u.id
+        WHERE b.buyer_id = %s
+        ORDER BY b.created_at DESC
+    """, (user['id'],))
+
+    return render_template("inbox.html", user=user, received=received, sent=sent)
+
+
+@app.route("/profile/<int:user_id>")
+@login_required
+def profile_page(user, user_id):
+    user = normalise_user(user)
+    
+    # 1. Fetch targeted user
+    target = query("SELECT * FROM users WHERE id=%s", (user_id,), one=True)
+    if not target:
+        return redirect("/") # Or a 404 page
+        
+    target = normalise_user(target)
+    
+    # 2. Check connection status
+    conn = query(
+        "SELECT status FROM connections WHERE (requester_id=%s AND receiver_id=%s) OR (requester_id=%s AND receiver_id=%s)",
+        (user['id'], user_id, user_id, user['id']),
+        one=True
+    )
+    is_connected = conn['status'] == 'accepted' if conn else False
+    is_pending = conn['status'] == 'pending' if conn else False
+    
+    # 3. Fetch user's posts
+    posts = query("""
+        SELECT p.*, u.full_name AS author_name, u.avatar_url 
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = %s
+        ORDER BY p.created_at DESC
+    """, (user_id,))
+    
+    return render_template("profile.html", user=user, target=target, posts=posts, is_connected=is_connected, is_pending=is_pending)
 
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+

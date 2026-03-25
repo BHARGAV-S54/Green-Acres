@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS market_listings (
     price        DECIMAL(12,2) NOT NULL,
     price_unit   VARCHAR(50) DEFAULT '',    -- e.g. "/kg", "/day", "/quintal"
     location     VARCHAR(200),
+    contact_phone VARCHAR(20) DEFAULT '',
     image_url    VARCHAR(500) DEFAULT '',
     status       ENUM('active','sold','expired') DEFAULT 'active',
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -118,6 +119,19 @@ CREATE TABLE IF NOT EXISTS revoked_tokens (
     revoked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ── Market Bookings ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS market_bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    buyer_id INT NOT NULL,
+    seller_id INT NOT NULL,
+    listing_id INT NOT NULL,
+    status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(buyer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(seller_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(listing_id) REFERENCES market_listings(id) ON DELETE CASCADE
+);
+
 -- ════════════════════════════════════════
 --   Seed Data
 -- ════════════════════════════════════════
@@ -127,13 +141,9 @@ INSERT IGNORE INTO users
 VALUES
     ('Organic Farmer',
      'demo_farmer',
-<<<<<<< HEAD
-     'demo@greenacres.in',
-     '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',  -- bcrypt of "farmer123"
-=======
      'demo@agriconnect.in',
      '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
      'Organic Farmer & Agri-Tech Enthusiast',
      'Andhra Pradesh, India',
      'Passionate about sustainable farming and agri-technology. Sharing knowledge with fellow farmers.',
@@ -145,13 +155,9 @@ INSERT IGNORE INTO users
 VALUES
     ('Rajesh Kumar',
      'rajesh_farmer',
-<<<<<<< HEAD
-     'rajesh@greenacres.in',
-     '$2b$12$EqPqMvnfNQ7b9H8Zxd1XreBdwT7g1lPEuDtROXmWTQ.EGrNQ3PSOe',
-=======
      'rajesh@agriconnect.in',
      '26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab',
->>>>>>> 606445de75b83fa81612ed0cc0cc20a8821a2d00
+
      'Traditional Wheat Farmer',
      'Punjab, India',
      'Third generation wheat farmer from Punjab. I swear by drip irrigation!',
@@ -162,6 +168,6 @@ INSERT IGNORE INTO posts (user_id, content, likes, comments) VALUES
 (2, 'Just finished testing the new drip irrigation system on the north field. The water savings are incredible! Highly recommend this to anyone dealing with the current dry spell. Happy to share the installation guide if anyone needs it. 🌾💧', 124, 18),
 (1, 'Started using neem oil spray on my crops this season instead of chemical pesticides. The results are amazing – pests are down 70% and my veggies look healthier than ever! 🌿✨', 89, 12);
 
-INSERT IGNORE INTO market_listings (seller_id, title, category, listing_type, price, price_unit, location) VALUES
-(2, 'Mahindra JIVO 245 DI Tractor', 'tractor', 'rent', 1800, '/day', 'Punjab, India'),
-(1, 'Pure Desi Cow Ghee (1L)', 'ghee', 'sell', 850, '/litre', 'Andhra Pradesh, India');
+INSERT IGNORE INTO market_listings (seller_id, title, category, listing_type, price, price_unit, location, image_url, description) VALUES
+(2, 'Mahindra JIVO 245 DI Tractor', 'tractor', 'rent', 1800, '/day', 'Punjab, India', '/static/agri/Mahindra JIVO 245 DI Tractor.avif', 'High performance compact tractor for small farms. 4WD, 24HP, 2023 Model.'),
+(1, 'Pure Desi Cow Ghee (1L)', 'ghee', 'sell', 850, '/litre', 'Andhra Pradesh, India', '/static/agri/Pure Desi Cow Ghee (1L).webp', 'Traditional A2 Cow Ghee. No additives, purely handcrafted.');

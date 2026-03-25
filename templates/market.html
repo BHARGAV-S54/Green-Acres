@@ -37,215 +37,38 @@
             <div class="market-search" style="flex-grow:1; max-width:400px; display:flex; align-items:center; background:var(--card-bg); border:1px solid var(--border-color); border-radius:25px; padding:8px 15px;">
                 <i class="fa-solid fa-magnifying-glass" style="color:var(--icon-gray); margin-right:10px;"></i>
                 <input type="text" id="market-search-input" placeholder="Search products..." style="border:none; background:none; outline:none; font-size:14px; width:100%;">
-            </div>
-        </div>
-
-        <!-- Product Grid -->
+            </div>        <!-- Product Grid -->
         <div class="product-grid" id="product-grid">
-
-            <!-- Tractor - Rent -->
-            <div class="product-card" data-category="tractor">
-                <div class="product-badge rent">Rent</div>
+            {% for item in listings %}
+            <div class="product-card" data-category="{{ item.category }}">
+                <div class="product-badge {{ 'sell' if item.listing_type == 'sell' else 'rent' }}">
+                    {{ 'For Sale' if item.listing_type == 'sell' else 'Rent' }}
+                </div>
                 <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Mahindra JIVO 245 DI Tractor.avif') }}" alt="Mahindra JIVO">
+                    <img src="{{ item.image_url if item.image_url else url_for('static', filename='images/listing-placeholder.png') }}" 
+                         alt="{{ item.title }}"
+                         onerror="this.src='{{ url_for('static', filename='images/listing-placeholder.png') }}';">
                 </div>
                 <div class="product-body">
-                    <h3 class="product-name">Mahindra JIVO 245 DI Tractor</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Ravi Shankar · Punjab</p>
-                    <div class="product-tags">
-                        <span class="ptag">4WD</span>
-                        <span class="ptag">24HP</span>
-                        <span class="ptag">2023 Model</span>
-                    </div>
+                    <h3 class="product-name">{{ item.title }}</h3>
+                    <p class="product-seller"><i class="fa-solid fa-user"></i> {{ item.seller_name }} · {{ item.seller_location }}</p>
+                    {% if item.contact_phone %}
+                    <p class="product-seller" style="margin-top: 5px; color: var(--primary-green); font-weight: 500;"><i class="fa-solid fa-phone"></i> {{ item.contact_phone }}</p>
+                    {% endif %}
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; height:36px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                        {{ item.description }}
+                    </p>
                     <div class="product-footer">
-                        <span class="product-price">₹1,800 <small>/day</small></span>
-                        <button class="buy-btn rent-btn">Rent Now</button>
+                        <span class="product-price">₹{{ "{:,.2f}".format(item.price) }} <small>{{ item.price_unit if item.price_unit else '' }}</small></span>
+                        <button class="buy-btn {{ 'rent-btn' if item.listing_type == 'rent' else '' }}" 
+                                data-listing-id="{{ item.id }}" 
+                                data-seller-id="{{ item.seller_id }}">
+                            {{ 'Rent Now' if item.listing_type == 'rent' else 'Buy Now' }}
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Tractor - Purchase -->
-            <div class="product-card" data-category="tractor">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Sonalika GT 20 Mini Tractor.jpg') }}" alt="Sonalika GT 20">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Sonalika GT 20 Mini Tractor</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Anand Kumar · Haryana</p>
-                    <div class="product-tags">
-                        <span class="ptag">2WD</span>
-                        <span class="ptag">20HP</span>
-                        <span class="ptag">Good Condition</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹3,40,000</span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fertilizer - Sell -->
-            <div class="product-card" data-category="fertilizer">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Vermicompost Fertilizer (50kg).jpg') }}" alt="Vermicompost">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Vermicompost Fertilizer (50kg)</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> GreenEarth Farms · UP</p>
-                    <div class="product-tags">
-                        <span class="ptag">Organic</span>
-                        <span class="ptag">50kg Bag</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹420 <small>/bag</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fertilizer - DAP -->
-            <div class="product-card" data-category="fertilizer">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/DAP Fertilizer (50kg.jpg') }}" alt="DAP Fertilizer">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">DAP Fertilizer (50kg)</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Kisaan Store · MP</p>
-                    <div class="product-tags">
-                        <span class="ptag">NPK Rich</span>
-                        <span class="ptag">50kg</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹1,350 <small>/bag</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ghee -->
-            <div class="product-card" data-category="ghee">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Pure Desi Cow Ghee (1L).webp') }}" alt="Cow Ghee">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Pure Desi Cow Ghee (1L)</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Gopal Dairy · Gujarat</p>
-                    <div class="product-tags">
-                        <span class="ptag">A2 Cow</span>
-                        <span class="ptag">Pure</span>
-                        <span class="ptag">No Additives</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹850 <small>/litre</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ghee - Buffalo -->
-            <div class="product-card" data-category="ghee">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Buffalo Ghee (500ml Jar).png') }}" alt="Buffalo Ghee">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Buffalo Ghee (500ml Jar)</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Farm Fresh · Rajasthan</p>
-                    <div class="product-tags">
-                        <span class="ptag">Handcrafted</span>
-                        <span class="ptag">500ml</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹480 <small>/jar</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grain - Wheat -->
-            <div class="product-card" data-category="grain">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Premium Wheat (Sharbati) 1 Quintal.jpg') }}" alt="Wheat">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Premium Wheat (Sharbati) 1 Quintal</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Rajesh Kumar · Punjab</p>
-                    <div class="product-tags">
-                        <span class="ptag">Grade A</span>
-                        <span class="ptag">Clean</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹2,200 <small>/quintal</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grain - Rice -->
-            <div class="product-card" data-category="grain">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Basmati Rice (Long Grain) 50kg.jpg') }}" alt="Rice">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Basmati Rice (Long Grain) 50kg</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Mohan Das · UP</p>
-                    <div class="product-tags">
-                        <span class="ptag">Aged</span>
-                        <span class="ptag">Aromatic</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹4,800 <small>/50kg</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Crop - Tomato -->
-            <div class="product-card" data-category="crop">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Fresh Tomato (Desi Hybrid) 10kg.jpg') }}" alt="Tomato">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Fresh Tomato (Desi Hybrid) 10kg</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Suresh Farms · AP</p>
-                    <div class="product-tags">
-                        <span class="ptag">Fresh</span>
-                        <span class="ptag">Pesticide Free</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹320 <small>/10kg</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Crop - Onion -->
-            <div class="product-card" data-category="crop">
-                <div class="product-badge sell">For Sale</div>
-                <div class="product-image">
-                    <img src="{{ url_for('static', filename='agri/Red Onion 50kg Bag.jpg') }}" alt="Onion">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name">Red Onion 50kg Bag</h3>
-                    <p class="product-seller"><i class="fa-solid fa-user"></i> Kisaan Crop Co · Maharashtra</p>
-                    <div class="product-tags">
-                        <span class="ptag">Grade A</span>
-                        <span class="ptag">50kg</span>
-                    </div>
-                    <div class="product-footer">
-                        <span class="product-price">₹1,100 <small>/50kg</small></span>
-                        <button class="buy-btn">Buy Now</button>
-                    </div>
-                </div>
-            </div>
-
+            {% endfor %}
         </div>
     </main>
 
@@ -271,9 +94,26 @@
                     <option value="rent">For Rent</option>
                 </select>
                 <input type="text" class="modal-input" name="title" placeholder="Product Title" required>
-                <input type="text" class="modal-input" name="price" placeholder="Price (e.g. ₹500/kg)" required>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" step="0.01" class="modal-input" name="price" placeholder="Price (e.g. 500)" style="flex:1;" required>
+                    <input type="text" class="modal-input" name="price_unit" placeholder="per kg / total" style="flex:1;">
+                </div>
                 <textarea class="modal-textarea" name="description" placeholder="Description..." rows="3"></textarea>
-                <button type="submit" class="modal-submit-btn">Post Listing</button>
+                <input type="tel" class="modal-input" name="contact_phone" placeholder="Contact Number (for queries)" style="margin-top:10px;">
+
+
+                <div class="image-upload-wrap" style="margin-top:10px;">
+                    <label for="listing-image" class="action-btn" style="border:1px dashed var(--border-color); width:100%; justify-content:center; padding:15px; border-radius:8px;">
+                        <i class="fa-regular fa-image"></i> Click to upload product photo
+                    </label>
+                    <input type="file" id="listing-image" name="image" accept="image/*" style="display:none;">
+                    <div id="listing-preview" style="display:none; margin-top:10px; position:relative;">
+                        <img id="preview-img" src="#" alt="Preview" style="max-width:100%; height:120px; object-fit:cover; border-radius:8px;">
+                        <button type="button" id="remove-img" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">&times;</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="modal-submit-btn" id="submit-listing-btn" style="margin-top:20px;">Post Listing</button>
             </form>
         </div>
     </div>
@@ -321,11 +161,93 @@
                 document.getElementById('listing-modal').classList.remove('visible');
             }
         });
-        document.getElementById('listing-form').addEventListener('submit', (e) => {
+        // Image Preview logic
+        const imgInput = document.getElementById('listing-image');
+        const previewWrap = document.getElementById('listing-preview');
+        const previewImg = document.getElementById('preview-img');
+        const removeBtn = document.getElementById('remove-img');
+
+        imgInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    previewImg.src = e.target.result;
+                    previewWrap.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeBtn.addEventListener('click', () => {
+            imgInput.value = '';
+            previewWrap.style.display = 'none';
+        });
+
+        document.getElementById('listing-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            document.getElementById('listing-modal').classList.remove('visible');
-            alert('Your listing has been submitted for review! 🌾');
-            e.target.reset();
+            const btn = document.getElementById('submit-listing-btn');
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+
+            const formData = new FormData(this);
+
+            try {
+                const resp = await fetch('/api/market/create', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+
+                if (data.status === 'success') {
+                    alert('Your listing has been posted successfully! 🌾');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Post Listing';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Request failed. Check connection.');
+                btn.disabled = false;
+                btn.textContent = 'Post Listing';
+            }
+        });
+
+        // Booking Logic
+        document.querySelectorAll('.buy-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const listingId = this.dataset.listingId;
+                const sellerId = this.dataset.sellerId;
+                
+                // Demo listings might not have an ID if they aren't in DB yet
+                if (!listingId) {
+                    alert('This is a demo listing. Booking features require live listings from the database.');
+                    return;
+                }
+
+                if (confirm('Do you want to send a booking request to the seller?')) {
+                    this.disabled = true;
+                    this.textContent = 'Requesting...';
+                    try {
+                        const resp = await fetch(`/api/market/book/${listingId}`, { method: 'POST' });
+                        const data = await resp.json();
+                        if (data.status === 'success') {
+                            alert('Booking request sent successfully! Check your inbox to track its status.');
+                            this.textContent = 'Requested';
+                        } else {
+                            alert('Error: ' + data.message);
+                            this.disabled = false;
+                            this.textContent = this.classList.contains('rent-btn') ? 'Rent Now' : 'Buy Now';
+                        }
+                    } catch (err) {
+                        alert('Something went wrong.');
+                        this.disabled = false;
+                        this.textContent = this.classList.contains('rent-btn') ? 'Rent Now' : 'Buy Now';
+                    }
+                }
+            });
         });
     </script>
 </body>

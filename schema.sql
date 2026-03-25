@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════
---   AgriConnect Database Schema
+--   GreenAcres Database Schema
 -- ════════════════════════════════════════
 CREATE DATABASE IF NOT EXISTS agriconnect_db
   DEFAULT CHARACTER SET utf8mb4

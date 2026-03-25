@@ -1,4 +1,4 @@
-# AgriConnect
+# GreenAcres
 
 A community platform connecting farmers across India — share updates, network with fellow growers, and trade agricultural products.
 

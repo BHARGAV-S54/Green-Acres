@@ -218,3 +218,203 @@ label { font-size: 13px; font-weight: 600; color: var(--text-main); }
     .auth-form-panel { width: 100%; padding: 24px; }
     .input-row { flex-direction: column; gap: 0; }
 }
+
+/* ════════════════════════════════════
+   Social Login Buttons
+════════════════════════════════════ */
+.social-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 24px 0 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.social-divider::before,
+.social-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+.social-divider span {
+    padding: 0 14px;
+}
+
+.social-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.social-btn {
+    flex: 1;
+    min-width: 90px;
+    padding: 11px 16px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+    border: none;
+}
+.social-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.social-btn:active {
+    transform: scale(0.98);
+}
+
+.social-btn.google {
+    background: #ffffff;
+    border: 1.5px solid var(--border-color);
+    color: #333333;
+}
+.social-btn.google:hover {
+    background: #f8f9fa;
+    border-color: #dadce0;
+}
+
+.social-btn.github {
+    background: #24292e;
+    color: #ffffff;
+}
+.social-btn.github:hover {
+    background: #1b1f23;
+}
+
+.social-btn.phone {
+    background: var(--primary-green);
+    color: #ffffff;
+}
+.social-btn.phone:hover {
+    background: var(--primary-green-hover);
+}
+
+/* ════════════════════════════════════
+   Phone OTP Modal
+════════════════════════════════════ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg-color);
+    border-radius: 50%;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.modal-close:hover {
+    background: var(--error-bg);
+    color: var(--error-text);
+}
+
+.modal-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.modal-content h3 i {
+    color: var(--primary-green);
+}
+
+.modal-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.resend-link {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 16px;
+}
+.resend-link a {
+    color: var(--primary-green);
+    font-weight: 600;
+    text-decoration: none;
+}
+.resend-link a:hover {
+    text-decoration: underline;
+}
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    color: var(--primary-green);
+    font-weight: 500;
+}
+.loading-spinner i {
+    font-size: 18px;
+}
+
+/* Responsive modal */
+@media (max-width: 480px) {
+    .modal-content {
+        margin: 16px;
+        padding: 24px;
+    }
+    .social-buttons {
+        flex-direction: column;
+    }
+    .social-btn {
+        width: 100%;
+    }
+}

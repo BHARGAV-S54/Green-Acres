@@ -8,16 +8,61 @@ import jwt
 from flask import (Flask, render_template, request, redirect,
                    url_for, make_response, jsonify)
 import mysql.connector
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Firebase Admin SDK (optional - only if service account file exists)
+firebase_initialized = False
+try:
+    import firebase_admin
+    from firebase_admin import credentials, auth as firebase_auth
+    firebase_cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-service-account.json')
+    if os.path.exists(firebase_cred_path):
+        cred = credentials.Certificate(firebase_cred_path)
+        firebase_admin.initialize_app(cred)
+        firebase_initialized = True
+        print('[Firebase] Initialized successfully')
+except Exception as e:
+    print(f'[Firebase] Not initialized: {e}')
 
 # ──────────────────────────────────────────────
 #  App Config
 # ──────────────────────────────────────────────
 app = Flask(__name__)
+app.secret_key = os.environ.get('AGRICONNECT_SECRET', 'agri-jwt-secret-2024-change-me')
 
-SECRET_KEY    = os.environ.get('AGRICONNECT_SECRET', 'agri-jwt-secret-2024-change-me')
+SECRET_KEY    = app.secret_key
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_HOURS = 24          # token lives for 24 hours
 COOKIE_NAME   = 'ac_token'  # HTTP-only cookie name
+
+# ──────────────────────────────────────────────
+#  OAuth Configuration
+# ──────────────────────────────────────────────
+oauth = OAuth(app)
+
+# Google OAuth
+google = oauth.register(
+    name='google',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+# GitHub OAuth
+github = oauth.register(
+    name='github',
+    client_id=os.environ.get('GITHUB_CLIENT_ID'),
+    client_secret=os.environ.get('GITHUB_CLIENT_SECRET'),
+    authorize_url='https://github.com/login/oauth/authorize',
+    access_token_url='https://github.com/login/oauth/access_token',
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email'}
+)
 
 # ──────────────────────────────────────────────
 #  Database helpers
@@ -315,6 +360,219 @@ def logout():
     resp = make_response(redirect('/login'))
     resp.delete_cookie(COOKIE_NAME)
     return resp
+
+
+# ══════════════════════════════════════════════
+#  OAUTH ROUTES
+# ══════════════════════════════════════════════
+
+def find_or_create_oauth_user(provider, oauth_id, email, full_name, avatar_url=None):
+    """Find existing user by OAuth credentials or create a new one."""
+    # First, try to find by OAuth provider + ID
+    user = query(
+        'SELECT * FROM users WHERE oauth_provider=%s AND oauth_id=%s AND is_active=1',
+        (provider, oauth_id), one=True
+    )
+    if user:
+        return user
+
+    # Check if user exists with same email (link accounts)
+    if email:
+        user = query('SELECT * FROM users WHERE email=%s AND is_active=1', (email,), one=True)
+        if user:
+            # Update existing user with OAuth info
+            execute('UPDATE users SET oauth_provider=%s, oauth_id=%s WHERE id=%s',
+                    (provider, oauth_id, user['id']))
+            return user
+
+    # Create new user
+    username = email.split('@')[0] if email else f'{provider}_{oauth_id[:8]}'
+    # Ensure username is unique
+    base_username = username
+    counter = 1
+    while query('SELECT 1 FROM users WHERE username=%s', (username,), one=True):
+        username = f'{base_username}_{counter}'
+        counter += 1
+
+    default_avatar = avatar_url or f"https://ui-avatars.com/api/?name={full_name.replace(' ', '+')}&background=1b873f&color=fff&rounded=true"
+
+    result = execute(
+        '''INSERT INTO users (full_name, username, email, oauth_provider, oauth_id, avatar_url)
+           VALUES (%s, %s, %s, %s, %s, %s)''',
+        (full_name, username, email, provider, oauth_id, default_avatar)
+    )
+
+    if result > 0:
+        return query('SELECT * FROM users WHERE id=%s', (result,), one=True)
+    return None
+
+
+# ── Google OAuth ────────────────────────────────
+
+@app.route('/auth/google')
+def auth_google():
+    if not os.environ.get('GOOGLE_CLIENT_ID'):
+        return render_template('login.html', error='Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.')
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        if not user_info:
+            return render_template('login.html', error='Failed to get user info from Google.')
+
+        email = user_info.get('email')
+        name = user_info.get('name', email.split('@')[0] if email else 'Google User')
+        google_id = user_info.get('sub')
+        picture = user_info.get('picture')
+
+        user = find_or_create_oauth_user('google', google_id, email, name, picture)
+        if not user:
+            return render_template('login.html', error='Failed to create account. Please try again.')
+
+        # Update last login
+        execute('UPDATE users SET last_login=%s WHERE id=%s', (datetime.now(), user['id']))
+
+        # Issue JWT and redirect
+        jwt_token = create_token(user['id'], user['username'])
+        resp = make_response(redirect('/'))
+        resp.set_cookie(COOKIE_NAME, jwt_token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite='Lax')
+        return resp
+
+    except Exception as e:
+        print(f'[Google OAuth] Error: {e}')
+        return render_template('login.html', error='Google authentication failed. Please try again.')
+
+
+# ── GitHub OAuth ────────────────────────────────
+
+@app.route('/auth/github')
+def auth_github():
+    if not os.environ.get('GITHUB_CLIENT_ID'):
+        return render_template('login.html', error='GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.')
+    redirect_uri = url_for('auth_github_callback', _external=True)
+    return github.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/github/callback')
+def auth_github_callback():
+    try:
+        token = github.authorize_access_token()
+        resp = github.get('user', token=token)
+        user_info = resp.json()
+
+        github_id = str(user_info.get('id'))
+        name = user_info.get('name') or user_info.get('login')
+        email = user_info.get('email')
+        avatar = user_info.get('avatar_url')
+
+        # If email is private, try to fetch from emails endpoint
+        if not email:
+            emails_resp = github.get('user/emails', token=token)
+            emails = emails_resp.json()
+            for e in emails:
+                if e.get('primary') and e.get('verified'):
+                    email = e.get('email')
+                    break
+
+        user = find_or_create_oauth_user('github', github_id, email, name, avatar)
+        if not user:
+            return render_template('login.html', error='Failed to create account. Please try again.')
+
+        # Update last login
+        execute('UPDATE users SET last_login=%s WHERE id=%s', (datetime.now(), user['id']))
+
+        # Issue JWT and redirect
+        jwt_token = create_token(user['id'], user['username'])
+        resp = make_response(redirect('/'))
+        resp.set_cookie(COOKIE_NAME, jwt_token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite='Lax')
+        return resp
+
+    except Exception as e:
+        print(f'[GitHub OAuth] Error: {e}')
+        return render_template('login.html', error='GitHub authentication failed. Please try again.')
+
+
+# ── Phone OTP (Firebase) ────────────────────────
+
+@app.route('/auth/phone/verify', methods=['POST'])
+def auth_phone_verify():
+    """Verify Firebase ID token and create/login user."""
+    if not firebase_initialized:
+        return jsonify({'success': False, 'error': 'Phone authentication not configured.'}), 400
+
+    data = request.get_json()
+    id_token = data.get('idToken')
+
+    if not id_token:
+        return jsonify({'success': False, 'error': 'No ID token provided.'}), 400
+
+    try:
+        decoded = firebase_auth.verify_id_token(id_token)
+        phone = decoded.get('phone_number')
+
+        if not phone:
+            return jsonify({'success': False, 'error': 'Phone number not found in token.'}), 400
+
+        # Find or create user by phone
+        user = query('SELECT * FROM users WHERE phone=%s AND is_active=1', (phone,), one=True)
+
+        if not user:
+            # Create new user with phone
+            username = f'user_{phone[-4:]}'
+            counter = 1
+            while query('SELECT 1 FROM users WHERE username=%s', (username,), one=True):
+                username = f'user_{phone[-4:]}_{counter}'
+                counter += 1
+
+            full_name = f'Farmer {phone[-4:]}'
+            avatar_url = f"https://ui-avatars.com/api/?name=F&background=1b873f&color=fff&rounded=true"
+
+            result = execute(
+                '''INSERT INTO users (full_name, username, phone, oauth_provider, avatar_url)
+                   VALUES (%s, %s, %s, %s, %s)''',
+                (full_name, username, phone, 'phone', avatar_url)
+            )
+
+            if result > 0:
+                user = query('SELECT * FROM users WHERE id=%s', (result,), one=True)
+            else:
+                return jsonify({'success': False, 'error': 'Failed to create account.'}), 500
+
+        # Update last login
+        execute('UPDATE users SET last_login=%s WHERE id=%s', (datetime.now(), user['id']))
+
+        # Issue JWT
+        jwt_token = create_token(user['id'], user['username'])
+
+        return jsonify({
+            'success': True,
+            'token': jwt_token,
+            'user': {
+                'id': user['id'],
+                'username': user['username'],
+                'full_name': user['full_name']
+            }
+        })
+
+    except Exception as e:
+        print(f'[Phone Auth] Error: {e}')
+        return jsonify({'success': False, 'error': 'Phone verification failed.'}), 400
+
+
+@app.route('/auth/phone/config')
+def auth_phone_config():
+    """Return Firebase config for frontend (safe to expose)."""
+    config = {
+        'apiKey': os.environ.get('FIREBASE_API_KEY', ''),
+        'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
+        'projectId': os.environ.get('FIREBASE_PROJECT_ID', ''),
+    }
+    return jsonify(config)
 
 
 # ══════════════════════════════════════════════

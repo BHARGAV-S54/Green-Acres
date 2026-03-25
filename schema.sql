@@ -12,8 +12,12 @@ CREATE TABLE IF NOT EXISTS users (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     full_name     VARCHAR(120) NOT NULL,
     username      VARCHAR(60)  NOT NULL UNIQUE,
-    email         VARCHAR(150) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    email         VARCHAR(150) UNIQUE,
+    password_hash VARCHAR(255) DEFAULT NULL,  -- Nullable for OAuth-only users
+    -- OAuth fields
+    oauth_provider VARCHAR(20) DEFAULT NULL,  -- 'google', 'github', 'phone'
+    oauth_id       VARCHAR(255) DEFAULT NULL, -- Provider's unique user ID
+    phone          VARCHAR(20) DEFAULT NULL,  -- Phone number for phone auth
     -- Profile details
     title         VARCHAR(180),               -- e.g. "Organic Wheat Farmer"
     location      VARCHAR(200),
@@ -28,7 +32,10 @@ CREATE TABLE IF NOT EXISTS users (
     is_verified   TINYINT(1) DEFAULT 0,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    last_login    TIMESTAMP NULL
+    last_login    TIMESTAMP NULL,
+    -- Indexes for OAuth lookup
+    UNIQUE INDEX idx_oauth (oauth_provider, oauth_id),
+    UNIQUE INDEX idx_phone (phone)
 );
 
 -- ── Connections / Followers ────────────────────────────
@@ -121,6 +128,16 @@ CREATE TABLE IF NOT EXISTS revoked_tokens (
 -- ════════════════════════════════════════
 --   Seed Data
 -- ════════════════════════════════════════
+
+-- Migration for existing databases (run if upgrading)
+-- ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(20) DEFAULT NULL;
+-- ALTER TABLE users ADD COLUMN oauth_id VARCHAR(255) DEFAULT NULL;
+-- ALTER TABLE users ADD COLUMN phone VARCHAR(20) DEFAULT NULL;
+-- ALTER TABLE users MODIFY password_hash VARCHAR(255) DEFAULT NULL;
+-- ALTER TABLE users MODIFY email VARCHAR(150);
+-- ALTER TABLE users ADD UNIQUE INDEX idx_oauth (oauth_provider, oauth_id);
+-- ALTER TABLE users ADD UNIQUE INDEX idx_phone (phone);
+
 -- Default admin / demo farmer account  (password: farmer123)
 INSERT IGNORE INTO users
     (full_name, username, email, password_hash, title, location, bio, avatar_url, connections)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriConnect - Market</title>
+    <title>GreenAcres - Market</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -15,7 +15,7 @@
         <!-- Market Header Banner -->
         <div class="market-hero">
             <div class="market-hero-text">
-                <h1>🌾 AgriConnect Marketplace</h1>
+                <h1>🌾 GreenAcres Marketplace</h1>
                 <p>Buy, Sell, or Rent tractors, fertilizers, seeds, crops, and more — directly from farmers near you.</p>
             </div>
             <button class="post-listing-btn" id="open-listing-modal">
@@ -23,14 +23,21 @@
             </button>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="market-filters">
-            <button class="filter-tab active" data-filter="all">All</button>
-            <button class="filter-tab" data-filter="tractor">🚜 Tractors</button>
-            <button class="filter-tab" data-filter="fertilizer">🧪 Fertilizers</button>
-            <button class="filter-tab" data-filter="ghee">🫙 Ghee</button>
-            <button class="filter-tab" data-filter="grain">🌾 Grains</button>
-            <button class="filter-tab" data-filter="crop">🥬 Crops</button>
+        <!-- Filter Tabs & Search -->
+        <div class="market-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:20px; flex-wrap:wrap;">
+            <div class="market-filters" style="margin-bottom:0; display:flex; gap:10px;">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="tractor">🚜 Tractors</button>
+                <button class="filter-tab" data-filter="fertilizer">🧪 Fertilizers</button>
+                <button class="filter-tab" data-filter="ghee">🫙 Ghee</button>
+                <button class="filter-tab" data-filter="grain">🌾 Grains</button>
+                <button class="filter-tab" data-filter="crop">🥬 Crops</button>
+            </div>
+            
+            <div class="market-search" style="flex-grow:1; max-width:400px; display:flex; align-items:center; background:var(--card-bg); border:1px solid var(--border-color); border-radius:25px; padding:8px 15px;">
+                <i class="fa-solid fa-magnifying-glass" style="color:var(--icon-gray); margin-right:10px;"></i>
+                <input type="text" id="market-search-input" placeholder="Search products..." style="border:none; background:none; outline:none; font-size:14px; width:100%;">
+            </div>
         </div>
 
         <!-- Product Grid -->
@@ -39,8 +46,8 @@
             <!-- Tractor - Rent -->
             <div class="product-card" data-category="tractor">
                 <div class="product-badge rent">Rent</div>
-                <div class="product-image tractor-bg">
-                    <i class="fa-solid fa-tractor product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Mahindra JIVO 245 DI Tractor.avif') }}" alt="Mahindra JIVO">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Mahindra JIVO 245 DI Tractor</h3>
@@ -60,8 +67,8 @@
             <!-- Tractor - Purchase -->
             <div class="product-card" data-category="tractor">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image tractor-bg">
-                    <i class="fa-solid fa-tractor product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Sonalika GT 20 Mini Tractor.jpg') }}" alt="Sonalika GT 20">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Sonalika GT 20 Mini Tractor</h3>
@@ -81,8 +88,8 @@
             <!-- Fertilizer - Sell -->
             <div class="product-card" data-category="fertilizer">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image fertilizer-bg">
-                    <i class="fa-solid fa-flask-vial product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Vermicompost Fertilizer (50kg).jpg') }}" alt="Vermicompost">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Vermicompost Fertilizer (50kg)</h3>
@@ -101,8 +108,8 @@
             <!-- Fertilizer - DAP -->
             <div class="product-card" data-category="fertilizer">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image fertilizer-bg">
-                    <i class="fa-solid fa-flask-vial product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/DAP Fertilizer (50kg.jpg') }}" alt="DAP Fertilizer">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">DAP Fertilizer (50kg)</h3>
@@ -121,8 +128,8 @@
             <!-- Ghee -->
             <div class="product-card" data-category="ghee">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image ghee-bg">
-                    <i class="fa-solid fa-jar product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Pure Desi Cow Ghee (1L).webp') }}" alt="Cow Ghee">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Pure Desi Cow Ghee (1L)</h3>
@@ -142,8 +149,8 @@
             <!-- Ghee - Buffalo -->
             <div class="product-card" data-category="ghee">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image ghee-bg">
-                    <i class="fa-solid fa-jar product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Buffalo Ghee (500ml Jar).png') }}" alt="Buffalo Ghee">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Buffalo Ghee (500ml Jar)</h3>
@@ -162,8 +169,8 @@
             <!-- Grain - Wheat -->
             <div class="product-card" data-category="grain">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image grain-bg">
-                    <i class="fa-solid fa-wheat-awn product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Premium Wheat (Sharbati) 1 Quintal.jpg') }}" alt="Wheat">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Premium Wheat (Sharbati) 1 Quintal</h3>
@@ -182,8 +189,8 @@
             <!-- Grain - Rice -->
             <div class="product-card" data-category="grain">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image grain-bg">
-                    <i class="fa-solid fa-wheat-awn product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Basmati Rice (Long Grain) 50kg.jpg') }}" alt="Rice">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Basmati Rice (Long Grain) 50kg</h3>
@@ -202,8 +209,8 @@
             <!-- Crop - Tomato -->
             <div class="product-card" data-category="crop">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image crop-bg">
-                    <i class="fa-solid fa-leaf product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Fresh Tomato (Desi Hybrid) 10kg.jpg') }}" alt="Tomato">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Fresh Tomato (Desi Hybrid) 10kg</h3>
@@ -222,8 +229,8 @@
             <!-- Crop - Onion -->
             <div class="product-card" data-category="crop">
                 <div class="product-badge sell">For Sale</div>
-                <div class="product-image crop-bg">
-                    <i class="fa-solid fa-leaf product-icon"></i>
+                <div class="product-image">
+                    <img src="{{ url_for('static', filename='agri/Red Onion 50kg Bag.jpg') }}" alt="Onion">
                 </div>
                 <div class="product-body">
                     <h3 class="product-name">Red Onion 50kg Bag</h3>
@@ -273,17 +280,34 @@
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
-        // Filter tabs
-        document.querySelectorAll('.filter-tab').forEach(tab => {
+        // Filter tabs & Search
+        const searchInput = document.getElementById('market-search-input');
+        const tabs = document.querySelectorAll('.filter-tab');
+        
+        function updateFilters() {
+            const filter = document.querySelector('.filter-tab.active').dataset.filter;
+            const query = searchInput.value.toLowerCase().trim();
+            
+            document.querySelectorAll('.product-card').forEach(card => {
+                const name = card.querySelector('.product-name').textContent.toLowerCase();
+                const category = card.dataset.category;
+                
+                const matchesFilter = (filter === 'all' || category === filter);
+                const matchesSearch = name.includes(query);
+                
+                card.style.display = (matchesFilter && matchesSearch) ? '' : 'none';
+            });
+        }
+
+        tabs.forEach(tab => {
             tab.addEventListener('click', function () {
-                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
-                const filter = this.dataset.filter;
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none';
-                });
+                updateFilters();
             });
         });
+
+        searchInput.addEventListener('input', updateFilters);
 
         // Modal
         document.getElementById('open-listing-modal').addEventListener('click', () => {

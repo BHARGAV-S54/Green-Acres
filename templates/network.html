@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriConnect - Network</title>
+    <title>GreenAcres - Network</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -21,20 +21,68 @@
                     <input type="text" id="friends-search-input" placeholder="Search connections..." aria-label="Search connections">
                 </div>
             </div>
-            <div class="friends-list" id="friends-list">
-                {% for friend in friends %}
-                <div class="friend-item {% if loop.first %}active{% endif %}" data-friend-id="{{ friend.id }}" onclick="selectFriend({{ friend.id }}, '{{ friend.name }}', '{{ friend.avatar_url }}', '{{ friend.title }}')">
-                    <div class="friend-avatar-wrap">
-                        <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="friend-avatar">
-                        <span class="status-dot online"></span>
-                    </div>
-                    <div class="friend-info">
-                        <p class="friend-name">{{ friend.name }}</p>
-                        <p class="friend-title">{{ friend.title }}</p>
-                    </div>
-                    <span class="friend-time">2m</span>
+            <div class="friends-tabs" style="display:flex; padding:0 15px 10px; border-bottom:1px solid var(--border-color); margin-bottom:10px; gap:15px;">
+                <button class="tab-btn active" data-tab="my-network" style="background:none; border:none; border-bottom:2px solid var(--primary-green); color:var(--primary-green); font-weight:600; cursor:pointer; padding-bottom:5px;">My Network</button>
+                <button class="tab-btn" data-tab="suggestions" style="background:none; border:none; color:var(--icon-gray); cursor:pointer; padding-bottom:5px;">Suggestions</button>
+            </div>
+
+            <div class="friends-list-container">
+                <!-- My Network Tab -->
+                <div class="friends-list" id="my-network">
+                    {% if friends %}
+                        {% for friend in friends %}
+                        <div class="friend-item {% if loop.first %}active{% endif %}" 
+                             data-friend-id="{{ friend.id }}" 
+                             data-name="{{ friend.name }}" 
+                             data-avatar="{{ friend.avatar_url }}" 
+                             data-title="{{ friend.title }}">
+                            <div class="friend-avatar-wrap">
+                                <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="friend-avatar">
+                                <span class="status-dot online"></span>
+                            </div>
+                            <div class="friend-info">
+                                <p class="friend-name">{{ friend.name or "Unnamed Farmer" }}</p>
+                                <p class="friend-title">{{ friend.title or "Professional Farmer" }}</p>
+                            </div>
+                            <button class="remove-conn-btn" title="Remove Connection" style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:13px; margin-left:auto; padding:5px 8px;">
+                                <i class="fa-solid fa-user-xmark"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align:center; padding:40px 20px; color:var(--icon-gray);">
+                            <i class="fa-regular fa-comments" style="font-size:32px; margin-bottom:10px; display:block; opacity:0.5;"></i>
+                            <p>No active connections</p>
+                            <small>Start by connecting with farmers in the Suggestions tab!</small>
+                        </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
+
+                <!-- Suggestions Tab -->
+                <div class="friends-list" id="suggestions" style="display:none;">
+                    {% if suggestions %}
+                        {% for sug in suggestions %}
+                        <div class="friend-item" 
+                             data-friend-id="{{ sug.id }}" 
+                             data-name="{{ sug.name }}" 
+                             data-avatar="{{ sug.avatar_url }}" 
+                             data-title="{{ sug.title }}">
+                            <div class="friend-avatar-wrap">
+                                <img src="{{ sug.avatar_url }}" alt="{{ sug.name }}" class="friend-avatar">
+                            </div>
+                            <div class="friend-info">
+                                <p class="friend-name">{{ sug.name }}</p>
+                                <p class="friend-title">{{ sug.title }}</p>
+                            </div>
+                            <button class="connect-btn" style="background:var(--primary-green); color:white; border:none; padding:5px 12px; border-radius:15px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                                Connect
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align:center; padding:20px; color:var(--icon-gray);">No new suggestions available.</p>
+                    {% endif %}
+                </div>
             </div>
         </aside>
 
@@ -42,11 +90,21 @@
         <div class="chat-window" id="chat-window">
             <div class="chat-header" id="chat-header">
                 <div class="chat-header-info">
+                    {% if friends %}
                     <img src="{{ friends[0].avatar_url }}" alt="Chat user" class="chat-avatar" id="chat-avatar">
                     <div>
                         <p class="chat-name" id="chat-name">{{ friends[0].name }}</p>
                         <p class="chat-status">Online – {{ friends[0].title }}</p>
                     </div>
+                    {% else %}
+                    <div style="width:40px; height:40px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-user" style="color:#cbd5e1;"></i>
+                    </div>
+                    <div>
+                        <p class="chat-name" id="chat-name">No Connection</p>
+                        <p class="chat-status">Offline</p>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="chat-actions">
                     <button class="chat-icon-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
@@ -55,25 +113,20 @@
                 </div>
             </div>
             <div class="messages-area" id="messages-area">
-                <div class="msg-date-sep"><span>Today</span></div>
+                {% if friends %}
+                <div class="msg-date-sep"><span>Recent Conversation</span></div>
                 <!-- Received -->
                 <div class="msg-row received">
-                    <img src="{{ friends[0].avatar_url }}" alt="" class="msg-avatar">
-                    <div class="msg-bubble received-bubble">Is the drip irrigation guide ready to share? 🌱</div>
+                    <img src="{{ friends[0].avatar_url }}" alt="" class="msg-avatar" id="msg-avatar-preview">
+                    <div class="msg-bubble received-bubble">Welcome to the network! Feel free to start a conversation here. 🌱</div>
                 </div>
-                <!-- Sent -->
-                <div class="msg-row sent">
-                    <div class="msg-bubble sent-bubble">Yes! I'll send the PDF soon. Also, how's your wheat harvest coming along?</div>
+                {% else %}
+                <div style="text-align:center; padding:100px 20px; color:var(--icon-gray);">
+                    <i class="fa-regular fa-comments" style="font-size:48px; margin-bottom:15px; display:block; opacity:0.3;"></i>
+                    <p style="font-size:16px; font-weight:600;">Networking Starts Here</p>
+                    <p style="font-size:14px; margin-top:5px;">Select a person from the Suggestions tab to connect and start chatting.</p>
                 </div>
-                <!-- Received -->
-                <div class="msg-row received">
-                    <img src="{{ friends[0].avatar_url }}" alt="" class="msg-avatar">
-                    <div class="msg-bubble received-bubble">Looking good! Rain came at just the right time 🌧️</div>
-                </div>
-                <!-- Sent -->
-                <div class="msg-row sent">
-                    <div class="msg-bubble sent-bubble">That's great news! Let's connect soon 🤝</div>
-                </div>
+                {% endif %}
             </div>
             <div class="chat-input-area">
                 <button class="chat-icon-btn"><i class="fa-solid fa-paperclip"></i></button>
@@ -83,16 +136,18 @@
             </div>
         </div>
 
-        <!-- Friend Profile Panel -->
-        <aside class="profile-panel" id="profile-panel">
-            <div class="profile-panel-inner">
-                <img src="{{ friends[0].avatar_url }}" alt="" class="pp-avatar" id="pp-avatar">
-                <h3 class="pp-name" id="pp-name">{{ friends[0].name }}</h3>
-                <p class="pp-title" id="pp-title">{{ friends[0].title }}</p>
+                <div class="profile-panel-inner" id="profile-panel-inner">
+                    <img src="{{ friends[0].avatar_url if friends else '' }}" alt="" class="pp-avatar" id="pp-avatar" style="{{ 'display:block' if friends else 'display:none' }}">
+                    <div id="pp-empty-icon" style="{{ 'display:none' if friends else 'display:flex' }}; width:80px; height:80px; border-radius:50%; background:#f1f5f9; align-items:center; justify-content:center; margin-bottom:15px;">
+                        <i class="fa-solid fa-user" style="font-size:32px; color:#cbd5e1;"></i>
+                    </div>
+                    
+                    <h3 class="pp-name" id="pp-name">{{ friends[0].name if friends else 'No Selection' }}</h3>
+                    <p class="pp-title" id="pp-title">{{ friends[0].title if friends else 'Select a contact' }}</p>
                 <p class="pp-loc"><i class="fa-solid fa-location-dot"></i> Andhra Pradesh, India</p>
-                <div class="pp-actions">
+                <div class="pp-actions" id="pp-actions" style="{{ 'display:flex' if friends else 'display:none' }}">
                     <button class="pp-btn primary-btn">View Full Profile</button>
-                    <button class="pp-btn outline-btn">Unfollow</button>
+                    <button class="pp-btn outline-btn profile-unfollow-btn">Unfollow</button>
                 </div>
                 <div class="pp-section">
                     <h4>Shared Interests</h4>
@@ -108,52 +163,165 @@
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
-        const friendsData = {{ friends|tojson }};
-
-        function selectFriend(id, name, avatar, title) {
-            document.querySelectorAll('.friend-item').forEach(el => el.classList.remove('active'));
-            document.querySelector(`.friend-item[data-friend-id="${id}"]`).classList.add('active');
-            document.getElementById('chat-avatar').src = avatar;
-            document.getElementById('chat-name').textContent = name;
-            document.getElementById('pp-avatar').src = avatar;
-            document.getElementById('pp-name').textContent = name;
-            document.getElementById('pp-title').textContent = title;
-            document.getElementById('messages-area').innerHTML = `
-                <div class="msg-date-sep"><span>Today</span></div>
-                <div class="msg-row received">
-                    <img src="${avatar}" alt="" class="msg-avatar">
-                    <div class="msg-bubble received-bubble">Hey! How are things going on the farm?</div>
-                </div>
-                <div class="msg-row sent">
-                    <div class="msg-bubble sent-bubble">Pretty good! Just started new crop rotation.</div>
-                </div>
-            `;
-        }
-
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.borderBottom = 'none';
+                    b.style.color = 'var(--icon-gray)';
+                });
+                this.classList.add('active');
+                this.style.borderBottom = '2px solid var(--primary-green)';
+                this.style.color = 'var(--primary-green)';
+                
+                const tabId = this.dataset.tab;
+                document.querySelectorAll('.friends-list').forEach(list => list.style.display = 'none');
+                document.getElementById(tabId).style.display = 'block';
+            });
         });
 
-        function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
-            const area = document.getElementById('messages-area');
-            const row = document.createElement('div');
-            row.className = 'msg-row sent';
-            row.innerHTML = `<div class="msg-bubble sent-bubble">${text}</div>`;
-            area.appendChild(row);
-            area.scrollTop = area.scrollHeight;
-            input.value = '';
-        }
+        // Event Delegation for Selection & Connect
+        document.querySelector('.friends-sidebar').addEventListener('click', async function(e) {
+            const item = e.target.closest('.friend-item');
+            if (!item) return;
 
+            // Handle Connect Button
+            const connectBtn = e.target.closest('.connect-btn');
+            if (connectBtn) {
+                const targetId = item.dataset.friendId;
+                connectBtn.disabled = true;
+                connectBtn.textContent = '...';
+
+                try {
+                    const resp = await fetch(`/api/connect/${targetId}`, { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.status === 'success') {
+                        // Move to My Network
+                        const myNetwork = document.getElementById('my-network');
+                        
+                        // Add status dot
+                        const wrap = item.querySelector('.friend-avatar-wrap');
+                        if (!wrap.querySelector('.status-dot')) {
+                            const dot = document.createElement('span');
+                            dot.className = 'status-dot online';
+                            wrap.appendChild(dot);
+                        }
+                        
+                        // Replace button
+                        connectBtn.remove();
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-conn-btn';
+                        removeBtn.title = 'Remove Connection';
+                        removeBtn.style = 'background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:13px; margin-left:auto; padding:5px 8px;';
+                        removeBtn.innerHTML = '<i class="fa-solid fa-user-xmark"></i>';
+                        item.appendChild(removeBtn);
+                        
+                myNetwork.appendChild(item);
+                        alert('Connected! 🌾');
+                    } else {
+                        alert(data.message || 'Connection failed');
+                        connectBtn.disabled = false;
+                        connectBtn.textContent = 'Connect';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    connectBtn.disabled = false;
+                    connectBtn.textContent = 'Connect';
+                }
+                return;
+            }
+
+            // Handle Remove Connection Button
+            const removeBtn = e.target.closest('.remove-conn-btn');
+            if (removeBtn) {
+                const targetId = item.dataset.friendId;
+                console.log(`[Sidebar Unfollow] Target: ${targetId}`);
+                handleUnfollow(targetId, item, removeBtn);
+                return;
+            }
+
+            // Handle Selection
+            if (!e.target.closest('button')) {
+                const { friendId, name, avatar, title } = item.dataset;
+                console.log(`[Friend Selected] ID: ${friendId}, Name: ${name}, Title: ${title}`); // DEBUG
+                
+                document.querySelectorAll('.friend-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+
+                // Fallback for missing name/avatar in UI panel
+                const finalName = name || 'Anonymous User';
+                const finalAvatar = avatar || `https://ui-avatars.com/api/?name=${finalName[0]}&background=random`;
+                
+                document.getElementById('chat-avatar').src = finalAvatar;
+                document.getElementById('chat-name').textContent = finalName;
+                document.getElementById('pp-avatar').src = finalAvatar;
+                document.getElementById('pp-avatar').style.display = 'block';
+                document.getElementById('pp-empty-icon').style.display = 'none';
+                document.getElementById('pp-actions').style.display = 'flex';
+                
+                document.getElementById('pp-name').textContent = finalName;
+                document.getElementById('pp-title').textContent = title || 'Farm Professional';
+                document.getElementById('profile-panel').dataset.activeFriendId = friendId;
+                
+                document.getElementById('messages-area').innerHTML = `
+                    <div class="msg-date-sep"><span>Today</span></div>
+                    <div class="msg-row received">
+                        <img src="${avatar}" alt="" class="msg-avatar">
+                        <div class="msg-bubble received-bubble">Hey! How are things going on the farm?</div>
+                    </div>
+                `;
+            }
+        });
+
+        // Search logic
         document.getElementById('friends-search-input').addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('.friend-item').forEach(el => {
-                const name = el.querySelector('.friend-name').textContent.toLowerCase();
+                const name = el.dataset.name.toLowerCase();
                 el.style.display = name.includes(q) ? '' : 'none';
             });
+        });
+
+        async function handleUnfollow(targetId, element, button) {
+            if (!targetId || !confirm('Are you sure you want to remove this connection?')) return;
+
+            button.disabled = true;
+            button.style.opacity = '0.5';
+
+            try {
+                console.log(`[Unfollow Action] ID: ${targetId}`);
+                const resp = await fetch(`/api/disconnect/${targetId}`, { method: 'POST' });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    // Update UI
+                    if(element) {
+                        element.classList.add('removing');
+                        setTimeout(() => {
+                            element.remove();
+                            if (element.classList.contains('active')) window.location.reload();
+                        }, 300);
+                    } else {
+                        window.location.reload(); 
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'Action failed'));
+                }
+            } catch (err) { 
+                console.error('[Connection Error]', err);
+                alert('Connection to server lost.');
+            } finally {
+                button.disabled = false;
+                button.style.opacity = '1';
+            }
+        }
+
+        // Profile Panel Unfollow logic
+        document.querySelector('.profile-unfollow-btn')?.addEventListener('click', function() {
+            const panel = document.getElementById('profile-panel');
+            const targetId = panel.dataset.activeFriendId;
+            const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
+            handleUnfollow(targetId, listItem, this);
         });
     </script>
 </body>

@@ -41,8 +41,8 @@
                                 <span class="status-dot online"></span>
                             </div>
                             <div class="friend-info">
-                                <p class="friend-name">{{ friend.name }}</p>
-                                <p class="friend-title">{{ friend.title }}</p>
+                                <p class="friend-name">{{ friend.name or "Unnamed Farmer" }}</p>
+                                <p class="friend-title">{{ friend.title or "Professional Farmer" }}</p>
                             </div>
                             <button class="remove-conn-btn" title="Remove Connection" style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:13px; margin-left:auto; padding:5px 8px;">
                                 <i class="fa-solid fa-user-xmark"></i>
@@ -153,7 +153,7 @@
                 <p class="pp-loc"><i class="fa-solid fa-location-dot"></i> Andhra Pradesh, India</p>
                 <div class="pp-actions">
                     <button class="pp-btn primary-btn">View Full Profile</button>
-                    <button class="pp-btn outline-btn">Unfollow</button>
+                    <button class="pp-btn outline-btn profile-unfollow-btn">Unfollow</button>
                 </div>
                 <div class="pp-section">
                     <h4>Shared Interests</h4>
@@ -274,14 +274,21 @@
             // Handle Selection
             if (!e.target.closest('button')) {
                 const { friendId, name, avatar, title } = item.dataset;
+                console.log(`[Friend Selected] ID: ${friendId}, Name: ${name}, Title: ${title}`); // DEBUG
+                
                 document.querySelectorAll('.friend-item').forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
 
-                document.getElementById('chat-avatar').src = avatar;
-                document.getElementById('chat-name').textContent = name;
-                document.getElementById('pp-avatar').src = avatar;
-                document.getElementById('pp-name').textContent = name;
-                document.getElementById('pp-title').textContent = title;
+                // Fallback for missing name/avatar in UI panel
+                const finalName = name || 'Anonymous User';
+                const finalAvatar = avatar || `https://ui-avatars.com/api/?name=${finalName[0]}&background=random`;
+                
+                document.getElementById('chat-avatar').src = finalAvatar;
+                document.getElementById('chat-name').textContent = finalName;
+                document.getElementById('pp-avatar').src = finalAvatar;
+                document.getElementById('pp-name').textContent = finalName;
+                document.getElementById('pp-title').textContent = title || 'Farm Professional';
+                document.getElementById('profile-panel').dataset.activeFriendId = friendId;
                 
                 document.getElementById('messages-area').innerHTML = `
                     <div class="msg-date-sep"><span>Today</span></div>
@@ -300,6 +307,32 @@
                 const name = el.dataset.name.toLowerCase();
                 el.style.display = name.includes(q) ? '' : 'none';
             });
+        });
+
+        // Profile Panel Unfollow logic
+        document.querySelector('.profile-unfollow-btn')?.addEventListener('click', async function() {
+            const panel = document.getElementById('profile-panel');
+            const targetId = panel.dataset.activeFriendId;
+            if (!targetId || !confirm('Are you sure you want to remove this connection?')) return;
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const resp = await fetch(`/api/disconnect/${targetId}`, { method: 'POST' });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    // Find the item in the sidebar list and remove it
+                    const listItem = document.querySelector(`.friend-item[data-friend-id="${targetId}"]`);
+                    if (listItem) listItem.remove();
+                    // Reload or clear panel
+                    window.location.reload(); 
+                } else {
+                    alert(data.message || 'Action failed');
+                }
+            } catch (err) { console.error(err); }
+            finally { btn.disabled = false; btn.textContent = 'Unfollow'; }
         });
     </script>
 </body>

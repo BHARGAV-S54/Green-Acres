@@ -457,8 +457,11 @@ def network(user):
     )
     
     for f in (friends + suggestions):
+        # Ensure name exists for first-letter fallback
+        display_name = (f.get('name') or f.get('username') or 'User')
         if not f.get('avatar_url'):
-            f['avatar_url'] = f"https://ui-avatars.com/api/?name={f['name'][0]}&background=random&rounded=true"
+            initial = display_name[0] if display_name else 'U'
+            f['avatar_url'] = f"https://ui-avatars.com/api/?name={initial}&background=random&rounded=true"
             
     return render_template('network.html', user=user, friends=friends, suggestions=suggestions)
 

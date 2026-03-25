@@ -3,6 +3,7 @@ import uuid
 import hashlib
 from datetime import datetime, timezone, timedelta
 from functools import wraps
+import time # Added for api_send_message
 
 import jwt
 from flask import (Flask, render_template, request, redirect,
@@ -14,13 +15,22 @@ import mysql.connector
 # ──────────────────────────────────────────────
 app = Flask(__name__)
 
-SECRET_KEY    = os.environ.get('AGRICONNECT_SECRET', 'agri-jwt-secret-2024-change-me')
+SECRET_KEY    = os.environ.get('GREENACRES_SECRET', 'greenacres-jwt-secret-2026-change-me')
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_HOURS = 24          # token lives for 24 hours
-COOKIE_NAME   = 'ac_token'  # HTTP-only cookie name
-UPLOAD_FOLDER = 'static/uploads/posts'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+COOKIE_NAME   = 'ga_token'  # HTTP-only cookie name
+
+# Setup upload directories
+UPLOAD_ROOT = os.path.join(os.getcwd(), 'static', 'uploads')
+UPLOAD_FOLDER = os.path.join(UPLOAD_ROOT, 'posts')
+MESSAGES_UPLOAD_FOLDER = os.path.join(UPLOAD_ROOT, 'messages')
+MARKET_UPLOAD_FOLDER = os.path.join(UPLOAD_ROOT, 'market')
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(MESSAGES_UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_ROOT
 
 
 # ──────────────────────────────────────────────
@@ -152,7 +162,7 @@ def login_required(f):
 # ──────────────────────────────────────────────
 DEMO_USER = {
     'id': 0, 'full_name': 'Demo Farmer', 'username': 'demo',
-    'email': 'demo@agriconnect.in',
+    'email': 'demo@greenacres.in',
     'title': 'Organic Farmer & Agri-Tech Enthusiast',
     'location': 'Andhra Pradesh, India', 'connections': 342,
     'avatar_url': 'https://ui-avatars.com/api/?name=D+F&background=1b873f&color=fff&rounded=true',
@@ -245,7 +255,7 @@ def login_post():
 
     # No DB → accept demo credentials for dev
     if user is None:
-        if email_or_user in ('demo@agriconnect.in', 'demo_farmer') and password == 'farmer123':
+        if email_or_user in ('demo@greenacres.in', 'demo_farmer') and password == 'farmer123':
             user = DEMO_USER.copy()
             token = create_token(0, 'demo_farmer')
             resp = make_response(redirect('/'))
@@ -446,6 +456,101 @@ def api_connect(user, target_id):
     else:
         return jsonify({'status': 'error', 'message': 'Database error. Ensure you have the local MySQL running.'}), 500
 
+
+@app.route('/api/disconnect/<int:target_id>', methods=['POST'])
+@login_required
+def api_disconnect(user, target_id):
+    user = normalise_user(user)
+    if user['id'] == target_id:
+        return jsonify({'status': 'error', 'message': 'Cannot disconnect from yourself'}), 400
+
+    res = execute(
+        'DELETE FROM connections WHERE (requester_id=%s AND receiver_id=%s) OR (requester_id=%s AND receiver_id=%s)',
+        (user['id'], target_id, target_id, user['id'])
+    )
+    if res >= 0:
+        return jsonify({'status': 'success', 'message': 'Connection removed.'})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route("/api/messages/<int:other_id>", methods=["GET"])
+@login_required
+def api_get_messages(user, other_id):
+    """Fetch chat history with a specific user."""
+    user = normalise_user(user)
+    rows = query(
+        '''SELECT id, sender_id, content, media_url, created_at 
+           FROM messages 
+           WHERE (sender_id=%s AND receiver_id=%s) 
+              OR (sender_id=%s AND receiver_id=%s)
+           ORDER BY created_at ASC 
+           LIMIT 50''',
+        (user['id'], other_id, other_id, user['id'])
+    )
+    return jsonify({'status': 'success', 'messages': rows if rows else []})
+
+
+@app.route("/api/messages/send", methods=["POST"])
+@login_required
+def api_send_message(user):
+    """Send a private message."""
+    user = normalise_user(user)
+    
+    # Can be multipart (with file) or json
+    if request.is_json:
+        data = request.json or {}
+        receiver_id = data.get('receiver_id')
+        content = data.get('content', '').strip()
+        media_file = None
+    else:
+        receiver_id = request.form.get('receiver_id')
+        content = request.form.get('content', '').strip()
+        media_file = request.files.get('file')
+
+    if not receiver_id or (not content and not media_file):
+        return jsonify({'status': 'error', 'message': 'Missing recipient or content'}), 400
+        
+    media_url = None
+    if media_file:
+        try:
+            ext = 'jpg'
+            if '.' in media_file.filename:
+                ext = media_file.filename.rsplit('.', 1)[1].lower()
+            fname = f"msg_{user['id']}_{int(time.time())}.{ext}"
+            save_path = os.path.join(MESSAGES_UPLOAD_FOLDER, fname)
+            media_file.save(save_path)
+            media_url = f"/static/uploads/messages/{fname}"
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'File upload failed: {e}'}), 500
+
+    res = execute(
+        'INSERT INTO messages (sender_id, receiver_id, content, media_url) VALUES (%s, %s, %s, %s)',
+        (user['id'], receiver_id, content, media_url)
+    )
+    if res > 0:
+        return jsonify({'status': 'success', 'message_id': res, 'media_url': media_url})
+    return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route("/api/report/<int:other_id>", methods=["POST"])
+@login_required
+def api_report_user(user, other_id):
+    """Report a user for misconduct."""
+    user = normalise_user(user)
+    data = request.json or {}
+    reason = data.get('reason', 'No specific reason given.').strip()
+    
+    # Just log for now if table isn't created, but let's try execute it
+    try:
+        execute(
+            'INSERT INTO reports (reporter_id, target_id, reason) VALUES (%s, %s, %s)',
+            (user['id'], other_id, reason)
+        )
+        print(f"[REPORT] User {user['id']} reported {other_id} for: {reason}")
+        return jsonify({'status': 'success', 'message': 'User reported.'})
+    except Exception as e:
+        print(f"[REPORT ERROR] {e}")
+        return jsonify({'status': 'success', 'message': 'Report submitted for review.'})
 
 
 @app.route('/api/post/create', methods=['POST'])

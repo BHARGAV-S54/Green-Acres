@@ -1,4 +1,4 @@
-# AgriConnect
+# GreenAcres
 
 A community platform connecting farmers across India — share updates, network with fellow growers, and trade agricultural products.
 
@@ -36,7 +36,7 @@ A community platform connecting farmers across India — share updates, network 
 ## Project Structure
 
 ```
-agriconnect/
+greenacres/
 ├── app.py                 # Flask application with all routes
 ├── schema.sql             # MySQL database schema & seed data
 ├── requirements.txt      # Python dependencies
@@ -67,7 +67,7 @@ agriconnect/
 ### 1. Clone & Navigate
 
 ```bash
-cd agriconnect
+cd greenacres
 ```
 
 ### 2. Create Virtual Environment
@@ -86,10 +86,10 @@ pip install -r requirements.txt
 
 ### 4. Configure Database
 
-Create a MySQL database named `agriconnect_db`:
+Create a MySQL database named `greenacres_db`:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS agriconnect_db
+CREATE DATABASE IF NOT EXISTS greenacres_db
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 ```
@@ -97,7 +97,7 @@ CREATE DATABASE IF NOT EXISTS agriconnect_db
 Run the schema to create tables and seed data:
 
 ```bash
-mysql -u root -p agriconnect_db < schema.sql
+mysql -u root -p greenacres_db < schema.sql
 ```
 
 Or import `schema.sql` via MySQL Workbench/phpmyadmin.
@@ -108,13 +108,13 @@ Set the secret key for JWT tokens:
 
 ```bash
 # Windows (Command Prompt)
-set AGRICONNECT_SECRET=your-secure-secret-key-here
+set GREENACRES_SECRET=your-secure-secret-key-here
 
 # Windows (PowerShell)
-$env:AGRICONNECT_SECRET="your-secure-secret-key-here"
+$env:GREENACRES_SECRET="your-secure-secret-key-here"
 
 # macOS/Linux
-export AGRICONNECT_SECRET="your-secure-secret-key-here"
+export GREENACRES_SECRET="your-secure-secret-key-here"
 ```
 
 ### 6. Update Database Credentials
@@ -126,7 +126,7 @@ DB_CONFIG = {
     'host':     '127.0.0.1',
     'user':     'root',
     'password': 'your_password',  # Update if needed
-    'database': 'agriconnect_db',
+    'database': 'greenacres_db',
     'charset':  'utf8mb4',
 }
 ```
@@ -145,7 +145,7 @@ A demo account is seeded in `schema.sql`:
 
 | Field | Value |
 |-------|-------|
-| Email | demo@agriconnect.in |
+| Email | demo@greenacres.in |
 | Username | demo_farmer |
 | Password | farmer123 |
 

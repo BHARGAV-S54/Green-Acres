@@ -1,0 +1,73 @@
+<!-- Shared Navbar Partial – requires `user` in template context -->
+<nav class="navbar">
+    <div class="nav-container">
+
+        <a href="/" class="logo" id="logo-link">
+            <div class="logo-icon-bg">
+                <i class="fa-solid fa-tractor logo-icon"></i>
+            </div>
+            <span class="logo-text">AgriConnect</span>
+        </a>
+
+
+
+        <ul class="nav-icons">
+            <li id="nav-home"     title="Home"     onclick="window.location='/'">
+                <i class="fa-solid fa-house"></i>
+                <span class="nav-label">Home</span>
+            </li>
+            <li id="nav-network"  title="Network"  onclick="window.location='/network'">
+                <i class="fa-solid fa-user-group"></i>
+                <span class="nav-label">Network</span>
+            </li>
+            <li id="nav-market"   title="Market"   onclick="window.location='/market'">
+                <i class="fa-solid fa-store"></i>
+                <span class="nav-label">Market</span>
+            </li>
+            <li id="nav-notif"    title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="nav-label">Alerts</span>
+            </li>
+        </ul>
+
+        <!-- Profile area with dropdown -->
+        <div class="profile-menu" id="profile-menu" onclick="toggleProfileDropdown(event)">
+            <img src="{{ user.avatar_url }}" alt="Profile" class="nav-avatar">
+            <span class="profile-text">{{ user.full_name.split()[0] if user.full_name else 'Profile' }}</span>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+
+            <div class="profile-dropdown" id="profile-dropdown">
+                <div class="dropdown-header">
+                    <p>{{ user.full_name }}</p>
+                    <small>{{ user.email if user.email else user.username }}</small>
+                </div>
+
+                <a href="/profile/edit" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </a>
+                <a href="/logout" class="dropdown-item danger">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<script>
+    // Highlight active nav item based on current path
+    (function() {
+        const path = window.location.pathname;
+        if (path === '/')           document.getElementById('nav-home')?.classList.add('active');
+        if (path === '/network')    document.getElementById('nav-network')?.classList.add('active');
+        if (path === '/market')     document.getElementById('nav-market')?.classList.add('active');
+    })();
+
+    function toggleProfileDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('profile-dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function() {
+        document.getElementById('profile-dropdown')?.classList.remove('open');
+    });
+</script>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriConnect - Home</title>
+    <title>GreenAcres - Home</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -47,17 +47,22 @@
             <div class="card create-post-box">
                 <div class="create-post-top">
                     <img src="{{ user.avatar_url }}" alt="User Avatar" class="post-avatar">
-                    <input type="text" class="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
+                    <input type="text" class="post-input" id="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
+                </div>
+                <!-- Image Preview Area -->
+                <div id="image-preview-container" style="display:none; padding:10px 20px; position:relative;">
+                    <img id="image-preview" src="#" alt="Preview" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);">
+                    <button id="remove-preview" style="position:absolute; top:15px; right:25px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="create-post-actions">
-                    <button class="action-btn"><i class="fa-regular fa-image text-blue"></i> Photo/Video</button>
-                    <button class="action-btn"><i class="fa-solid fa-cloud-sun text-orange"></i> Weather Update</button>
-                    <button class="action-btn"><i class="fa-solid fa-tractor text-green"></i> Need Tool</button>
+                    <button class="action-btn" id="gallery-btn"><i class="fa-regular fa-image text-blue"></i> Gallery</button>
+                    <input type="file" id="post-image-input" accept="image/*" style="display:none;">
+                    <button class="post-btn" id="submit-post" style="margin-left:auto; background:var(--primary-green); color:white; border:none; padding:8px 24px; border-radius:20px; font-weight:600; cursor:pointer;">Post</button>
                 </div>
             </div>
             <div class="feed-divider"><span>COMMUNITY FEED</span></div>
             {% for post in posts %}
-            <div class="card post-card">
+            <div class="card post-card" data-post-id="{{ post.id }}">
                 <div class="post-header">
                     <img src="{{ post.avatar_url }}" alt="Author Avatar" class="post-avatar">
                     <div class="post-meta">
@@ -67,15 +72,29 @@
                     </div>
                     <button class="post-options"><i class="fa-solid fa-ellipsis"></i></button>
                 </div>
-                <div class="post-content"><p>{{ post.content }}</p></div>
+                <div class="post-content">
+                    <p>{{ post.content }}</p>
+                    {% if post.media_url %}
+                    <img src="{{ post.media_url }}" alt="Post image" style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                    {% endif %}
+                </div>
                 <div class="post-stats">
                     <span class="likes-count">{{ post.likes }} Likes</span>
                     <span class="comments-count">{{ post.comments }} Comments</span>
                 </div>
                 <div class="post-actions">
-                    <button class="post-action-btn"><i class="fa-regular fa-thumbs-up"></i> Helpful</button>
-                    <button class="post-action-btn"><i class="fa-regular fa-comment"></i> Comment</button>
-                    <button class="post-action-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                    <button class="post-action-btn like-btn"><i class="fa-regular fa-thumbs-up"></i> Helpful</button>
+                    <button class="post-action-btn comment-toggle-btn"><i class="fa-regular fa-comment"></i> Comment</button>
+                    <button class="post-action-btn share-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                </div>
+                <!-- Comment Section -->
+                <div class="comment-section" style="display:none; padding: 15px 20px; border-top: 1px solid var(--border-color); background: #fdfdfd;">
+                    <div class="comment-input-wrap" style="display:flex; gap:10px; margin-bottom:15px;">
+                        <img src="{{ user.avatar_url }}" alt="" class="post-avatar" style="width:32px; height:32px;">
+                        <input type="text" class="comment-input" placeholder="Write a comment..." style="flex-grow:1; border:1px solid #e2e8f0; border-radius:20px; padding:0 15px; font-size:13px; outline:none;">
+                        <button class="btn-send-comment" style="background:var(--primary-green); color:white; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div class="comments-list"></div>
                 </div>
             </div>
             {% endfor %}
@@ -84,21 +103,224 @@
         <!-- Right Panel -->
         <aside class="right-panel">
             <div class="card suggestion-card">
-                <h3 class="panel-heading">People You May Know</h3>
-                {% for friend in suggestions %}
-                <div class="suggest-item">
+                <h3 class="panel-heading">Grow Your Network 🌾</h3>
+                
+                <!-- True Suggestions -->
+                {% for person in suggestions %}
+                <div class="suggest-item" data-id="{{ person.id }}">
+                    <img src="{{ person.avatar_url }}" alt="{{ person.name }}" class="suggest-avatar">
+                    <div class="suggest-info">
+                        <p class="suggest-name">{{ person.name }}</p>
+                        <p class="suggest-title">{{ person.title }}</p>
+                    </div>
+                    <button class="connect-btn sidebar-btn" title="Connect"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                {% endfor %}
+
+                <!-- Existing Connections (Friends) -->
+                {% if friends %}
+                <div style="border-top:1px solid #eee; margin:15px 0 10px; padding-top:15px;">
+                    <h3 class="panel-heading" style="font-size:13px; color:#666;">Connected Friends</h3>
+                </div>
+                {% for friend in friends %}
+                <div class="suggest-item" data-id="{{ friend.id }}">
                     <img src="{{ friend.avatar_url }}" alt="{{ friend.name }}" class="suggest-avatar">
                     <div class="suggest-info">
                         <p class="suggest-name">{{ friend.name }}</p>
                         <p class="suggest-title">{{ friend.title }}</p>
                     </div>
-                    <button class="connect-btn"><i class="fa-solid fa-plus"></i> Connect</button>
+                    <button class="unfollow-btn sidebar-btn" title="Unfollow"><i class="fa-solid fa-user-xmark"></i></button>
                 </div>
                 {% endfor %}
+                {% endif %}
             </div>
         </aside>
     </main>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Gallery logic
+        const galleryBtn = document.getElementById('gallery-btn');
+        const imageInput = document.getElementById('post-image-input');
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImg = document.getElementById('image-preview');
+        const removePreview = document.getElementById('remove-preview');
+
+        galleryBtn.addEventListener('click', () => imageInput.click());
+
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removePreview.addEventListener('click', () => {
+            imageInput.value = '';
+            previewContainer.style.display = 'none';
+        });
+
+        // Submit Post logic
+        document.getElementById('submit-post').addEventListener('click', async function() {
+            const content = document.getElementById('post-input').value.trim();
+            const file = imageInput.files[0];
+
+            if (!content && !file) return;
+
+            const formData = new FormData();
+            formData.append('content', content);
+            if (file) formData.append('image', file);
+
+            this.disabled = true;
+            this.textContent = 'Posting...';
+
+            try {
+                const resp = await fetch('/api/post/create', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.status === 'success') {
+                    location.reload(); // Quickest way to show new post with all logic
+                }
+            } catch (err) {
+                console.error(err);
+                this.disabled = false;
+                this.textContent = 'Post';
+            }
+        });
+
+        // --- Post Actions (Like, Comment, Share) ---
+        document.querySelector('.feed').addEventListener('click', async function(e) {
+            const card = e.target.closest('.post-card');
+            if (!card) return;
+            const postId = card.dataset.postId;
+
+            // 1. LIKE
+            const likeBtn = e.target.closest('.like-btn');
+            if (likeBtn) {
+                const icon = likeBtn.querySelector('i');
+                const likesSpan = card.querySelector('.likes-count');
+                try {
+                    const resp = await fetch(`/api/post/like/${postId}`, { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.status === 'success') {
+                        likesSpan.textContent = `${data.likes_count} Likes`;
+                        if (data.is_liked) {
+                            icon.classList.replace('fa-regular', 'fa-solid');
+                            likeBtn.style.color = 'var(--primary-green)';
+                        } else {
+                            icon.classList.replace('fa-solid', 'fa-regular');
+                            likeBtn.style.color = '';
+                        }
+                    }
+                } catch (err) { console.error(err); }
+                return;
+            }
+
+            // 2. COMMENT TOGGLE
+            const commentToggleBtn = e.target.closest('.comment-toggle-btn');
+            if (commentToggleBtn) {
+                const section = card.querySelector('.comment-section');
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+                if (section.style.display === 'block') section.querySelector('.comment-input').focus();
+                return;
+            }
+
+            // 3. SEND COMMENT
+            const sendCommentBtn = e.target.closest('.btn-send-comment');
+            if (sendCommentBtn) {
+                const input = card.querySelector('.comment-input');
+                const content = input.value.trim();
+                const list = card.querySelector('.comments-list');
+                const countSpan = card.querySelector('.comments-count');
+
+                if (!content) return;
+                sendCommentBtn.disabled = true;
+
+                try {
+                    const resp = await fetch(`/api/post/comment/${postId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content })
+                    });
+                    const data = await resp.json();
+                    if (data.status === 'success') {
+                        const c = data.comment;
+                        const html = `
+                            <div class="comment-item" style="display:flex; gap:10px; margin-bottom:12px;">
+                                <img src="${c.avatar_url}" alt="" class="post-avatar" style="width:28px; height:28px;">
+                                <div style="background:#f1f5f9; padding:8px 12px; border-radius:15px; flex-grow:1;">
+                                    <p style="font-size:12px; font-weight:700; margin-bottom:2px;">${c.author_name}</p>
+                                    <p style="font-size:13px; color:#334155;">${c.content}</p>
+                                </div>
+                            </div>`;
+                        list.insertAdjacentHTML('beforeend', html);
+                        input.value = '';
+                        countSpan.textContent = `${parseInt(countSpan.textContent) + 1} Comments`;
+                    }
+                } catch (err) { console.error(err); }
+                finally { sendCommentBtn.disabled = false; }
+                return;
+            }
+
+            // 4. SHARE
+            const shareBtn = e.target.closest('.share-btn');
+            if (shareBtn) {
+                const shareData = {
+                    title: 'GreenAcres Post',
+                    text: card.querySelector('.post-content p').textContent,
+                    url: window.location.href
+                };
+                if (navigator.share) navigator.share(shareData);
+                else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard! 📋');
+                }
+            }
+        });
+
+        // --- Sidebar Connect/Unfollow logic ---
+        document.querySelector('.right-panel').addEventListener('click', async function(e) {
+            const item = e.target.closest('.suggest-item');
+            if (!item) return;
+            const targetId = item.dataset.id;
+            const btn = e.target.closest('.sidebar-btn');
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+
+            const isConnect = btn.classList.contains('connect-btn');
+            const endpoint = isConnect ? `/api/connect/${targetId}` : `/api/disconnect/${targetId}`;
+
+            try {
+                console.log(`[Unfollow] Target: ${targetId}, Endpoint: ${endpoint}`); // Debug
+                const resp = await fetch(endpoint, { method: 'POST' });
+                const data = await resp.json();
+                
+                if (data.status === 'success') {
+                    if (isConnect) {
+                        btn.classList.replace('connect-btn', 'unfollow-btn');
+                        btn.innerHTML = '<i class="fa-solid fa-user-xmark"></i>';
+                        btn.title = 'Unfollow';
+                        alert('Connected! 🌾');
+                    } else {
+                        item.classList.add('removing');
+                        setTimeout(() => item.remove(), 300);
+                        alert('Connection removed.');
+                    }
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                }
+            } catch (err) { 
+                console.error('[Unfollow Error]', err);
+                alert('Request failed. Please check your connection.');
+            }
+            finally { btn.disabled = false; btn.style.opacity = '1'; }
+        });
+    </script>
 </body>
 </html>

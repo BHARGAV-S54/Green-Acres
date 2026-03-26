@@ -38,9 +38,13 @@ COOKIE_NAME = "ac_token"  # HTTP-only cookie name
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
 MARKET_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'market')
 MSG_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'messages')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(MSG_UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
+# Ensure folders exist (Ignore if read-only filesystem, e.g. Vercel)
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(MSG_UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
+except Exception as e:
+    print(f"[BOOT] Folder creation skipped (read-only): {e}")
 
 
 # ──────────────────────────────────────────────

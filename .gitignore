@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+static/uploads/
+*.db
+*.log
+.vscode/
+.env
+check_msgs.py
+debug_db.py
+migrate_backend.py

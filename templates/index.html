@@ -35,14 +35,16 @@
                     <img src="{{ user.avatar_url }}" alt="User Avatar" class="post-avatar">
                     <input type="text" class="post-input" id="post-input" placeholder="Share a farming update, ask for advice, or post a yield...">
                 </div>
-                <!-- Image Preview Area -->
-                <div id="image-preview-container" style="display:none; padding:10px 20px; position:relative;">
-                    <img id="image-preview" src="#" alt="Preview" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color);">
+                <!-- Media Preview Area -->
+                <div id="media-preview-container" style="display:none; padding:10px 20px; position:relative;">
+                    <img id="image-preview" src="#" alt="Preview" style="max-width:100%; border-radius:8px; border:1px solid var(--border-color); display:none;">
+                    <video id="video-preview" controls style="max-width:100%; border-radius:8px; border:1px solid var(--border-color); display:none;"></video>
                     <button id="remove-preview" style="position:absolute; top:15px; right:25px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="create-post-actions">
-                    <button class="action-btn" id="gallery-btn"><i class="fa-regular fa-image text-blue"></i> Gallery</button>
-                    <input type="file" id="post-image-input" accept="image/*" style="display:none;">
+                    <button class="action-btn" id="gallery-btn"><i class="fa-regular fa-image text-blue"></i> Photo</button>
+                    <button class="action-btn" id="video-btn"><i class="fa-solid fa-video text-blue"></i> Video</button>
+                    <input type="file" id="post-media-input" accept="image/*,video/*" style="display:none;">
                     <button class="post-btn" id="submit-post" style="margin-left:auto; background:var(--primary-green); color:white; border:none; padding:8px 24px; border-radius:20px; font-weight:600; cursor:pointer;">Post</button>
                 </div>
             </div>
@@ -65,7 +67,14 @@
                 <div class="post-content">
                     <p>{{ post.content }}</p>
                     {% if post.media_url %}
-                    <img src="{{ post.media_url }}" alt="Post image" style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                        {% if post.media_url.endswith(('.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv')) %}
+                        <video controls style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                            <source src="{{ post.media_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% else %}
+                        <img src="{{ post.media_url }}" alt="Post image" style="max-width:100%; border-radius:8px; margin-top:10px; border:1px solid #f1f5f9;">
+                        {% endif %}
                     {% endif %}
                 </div>
                 <div class="post-stats">
@@ -154,36 +163,54 @@
     </main>
 
     <script>
-        // Gallery logic
+        // Media upload logic (images + videos)
         const galleryBtn = document.getElementById('gallery-btn');
-        const imageInput = document.getElementById('post-image-input');
-        const previewContainer = document.getElementById('image-preview-container');
+        const videoBtn = document.getElementById('video-btn');
+        const mediaInput = document.getElementById('post-media-input');
+        const previewContainer = document.getElementById('media-preview-container');
         const previewImg = document.getElementById('image-preview');
+        const previewVid = document.getElementById('video-preview');
         const removePreview = document.getElementById('remove-preview');
 
-        galleryBtn.addEventListener('click', () => imageInput.click());
+        galleryBtn.addEventListener('click', () => {
+            mediaInput.accept = 'image/*';
+            mediaInput.click();
+        });
+        videoBtn.addEventListener('click', () => {
+            mediaInput.accept = 'video/*';
+            mediaInput.click();
+        });
 
-        imageInput.addEventListener('change', function() {
+        mediaInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    previewImg.src = e.target.result;
-                    previewContainer.style.display = 'block';
+                const isVideo = file.type.startsWith('video/');
+                const url = URL.createObjectURL(file);
+
+                if (isVideo) {
+                    previewVid.src = url;
+                    previewVid.style.display = 'block';
+                    previewImg.style.display = 'none';
+                } else {
+                    previewImg.src = url;
+                    previewImg.style.display = 'block';
+                    previewVid.style.display = 'none';
                 }
-                reader.readAsDataURL(file);
+                previewContainer.style.display = 'block';
             }
         });
 
         removePreview.addEventListener('click', () => {
-            imageInput.value = '';
+            mediaInput.value = '';
             previewContainer.style.display = 'none';
+            previewImg.style.display = 'none';
+            previewVid.style.display = 'none';
         });
 
         // Submit Post logic
         document.getElementById('submit-post').addEventListener('click', async function() {
             const content = document.getElementById('post-input').value.trim();
-            const file = imageInput.files[0];
+            const file = mediaInput.files[0];
 
             if (!content && !file) return;
 
@@ -199,10 +226,15 @@
                 const data = await resp.json();
 
                 if (data.status === 'success') {
-                    location.reload(); // Quickest way to show new post with all logic
+                    location.reload();
+                } else {
+                    alert(data.message || 'Post failed');
+                    this.disabled = false;
+                    this.textContent = 'Post';
                 }
             } catch (err) {
                 console.error(err);
+                alert('Connection error. Please try again.');
                 this.disabled = false;
                 this.textContent = 'Post';
             }
@@ -294,6 +326,38 @@
                 else {
                     navigator.clipboard.writeText(window.location.href);
                     alert('Link copied to clipboard! 📋');
+                }
+                return;
+            }
+
+            // 5. POST OPTIONS (Delete / Report)
+            const optionsBtn = e.target.closest('.post-options');
+            if (optionsBtn) {
+                const postUserId = card.querySelector('.post-header a')?.getAttribute('href')?.split('/').pop();
+                const currentUserId = '{{ user.id }}';
+                const isMe = postUserId === currentUserId;
+
+                if (isMe) {
+                    if (confirm('Delete this post permanently?')) {
+                        try {
+                            await fetch(`/api/post/delete/${postId}`, { method: 'POST' });
+                            card.style.transition = 'opacity 0.3s';
+                            card.style.opacity = '0';
+                            setTimeout(() => card.remove(), 300);
+                        } catch (err) { alert('Failed to delete post.'); }
+                    }
+                } else {
+                    const reason = prompt('Report this post for misconduct? Enter reason:');
+                    if (reason !== null) {
+                        try {
+                            await fetch(`/api/post/report/${postId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ reason })
+                            });
+                            alert('Post reported. Thank you! 🙏');
+                        } catch (err) { alert('Failed to submit report.'); }
+                    }
                 }
             }
         });

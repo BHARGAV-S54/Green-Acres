@@ -17,19 +17,29 @@ from flask import (
 )
 import mysql.connector
 
+from dotenv import load_dotenv
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
+load_dotenv()
+
 # ──────────────────────────────────────────────
 #  App Config
 # ──────────────────────────────────────────────
 app = Flask(__name__)
 
 SECRET_KEY = os.environ.get("AGRICONNECT_SECRET", "agri-jwt-secret-2024-change-me")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip().strip('"')
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip().strip('"')
 JWT_ALGORITHM = "HS256"
 JWT_EXP_HOURS = 24  # token lives for 24 hours
 COOKIE_NAME = "ac_token"  # HTTP-only cookie name
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'posts')
 MARKET_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'market')
+MSG_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static', 'uploads', 'messages')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(MSG_UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -344,7 +354,7 @@ def load_posts_db():
 def login_page():
     if get_current_user():
         return redirect("/")
-    return render_template("login.html", error=None)
+    return render_template("login.html", error=None, google_client_id=GOOGLE_CLIENT_ID)
 
 
 @app.route("/login", methods=["POST"])
@@ -395,7 +405,7 @@ def login_post():
 def register_page():
     if get_current_user():
         return redirect("/")
-    return render_template("register.html", error=None)
+    return render_template("register.html", error=None, google_client_id=GOOGLE_CLIENT_ID)
 
 
 @app.route("/register", methods=["POST"])
@@ -567,6 +577,69 @@ def api_login():
     return resp
 
 
+@app.route("/api/google-login", methods=["POST"])
+def api_google_login():
+    """JSON API for Google Login - verifying credential and returning a session."""
+    data = request.get_json() or {}
+    token = data.get("credential")
+
+    if not token:
+        return jsonify({"success": False, "message": "No credential provided"}), 400
+
+    if not GOOGLE_CLIENT_ID:
+        return jsonify({"success": False, "message": "Google Client ID not configured on server"}), 500
+
+    try:
+        # Verify the token with Google
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
+        email = idinfo.get("email", "").lower()
+        full_name = idinfo.get("name", "Google User")
+        avatar_url = idinfo.get("picture", "")
+
+        if not email:
+            return jsonify({"success": False, "message": "No email in Google token"}), 400
+
+        # Check if user exists
+        user = query("SELECT * FROM users WHERE email=%s AND is_active=1", (email,), one=True)
+        
+        if not user:
+            # Implicit Registration
+            base_username = email.split('@')[0].lower()
+            username = base_username
+            counter = 1
+            while query("SELECT id FROM users WHERE username=%s", (username,), one=True):
+                username = f"{base_username}{counter}"
+                counter += 1
+                
+            pw_hash = hash_password(str(uuid.uuid4())) # Unusable random password
+            
+            result = execute(
+                """INSERT INTO users
+                   (full_name, username, email, password_hash, title, location, avatar_url)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (full_name, username, email, pw_hash, "AgriConnect Member", "Unknown", avatar_url)
+            )
+            if result < 0:
+                return jsonify({"success": False, "message": "Failed to create user account"}), 500
+            
+            user_id = result
+        else:
+            user_id = user["id"]
+            username = user["username"]
+            execute("UPDATE users SET last_login=%s WHERE id=%s", (datetime.now(), user_id))
+
+        app_token = create_token(user_id, username)
+        
+        resp = make_response(jsonify({"success": True, "message": "Google login successful"}))
+        resp.set_cookie(COOKIE_NAME, app_token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite="Lax")
+        return resp
+
+    except ValueError:
+        # Invalid token
+        return jsonify({"success": False, "message": "Invalid Google token"}), 401
+
+
 @app.route("/api/register", methods=["POST"])
 def api_register():
     """JSON API for registration - returns JSON response."""
@@ -687,6 +760,24 @@ def api_logout():
     return resp
 
 
+@app.route("/api/account/delete", methods=["POST"])
+@login_required
+def api_delete_account(user):
+    """Deactivate current user account and logout."""
+    user = normalise_user(user)
+    token = request.cookies.get(COOKIE_NAME)
+    if token:
+        payload = decode_token(token)
+        if payload:
+            execute("INSERT IGNORE INTO revoked_tokens (jti) VALUES (%s)", (payload["jti"],))
+
+    execute("UPDATE users SET is_active=0 WHERE id=%s", (user['id'],))
+
+    resp = make_response(jsonify({"success": True, "message": "Account deactivated"}))
+    resp.delete_cookie(COOKIE_NAME)
+    return resp
+
+
 # ══════════════════════════════════════════════
 #  PROTECTED PAGE ROUTES
 # ══════════════════════════════════════════════
@@ -723,7 +814,11 @@ def index(user):
         (user['id'], user['id'], user['id'])
     )
     
-    return render_template('index.html', user=user, posts=posts, suggestions=suggestions, friends=friends)
+    # 3. Active farmers count
+    stats = query('SELECT COUNT(*) AS total FROM users WHERE is_active=1', one=True)
+    total_users = stats['total'] if stats else 0
+
+    return render_template('index.html', user=user, posts=posts, suggestions=suggestions, friends=friends, total_users=total_users)
 
 
 @app.route('/api/post/create', methods=['POST'])
@@ -737,9 +832,19 @@ def api_create_post(user, post_id=None):
         return jsonify({'status': 'error', 'message': 'Post content cannot be empty'}), 400
         
     media_url = None
+    media_type = None
     if image:
-        filename = f"post_{user['id']}_{int(time.time())}.jpg"
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # Preserve original file extension
+        ext = 'jpg'
+        if '.' in image.filename:
+            ext = image.filename.rsplit('.', 1)[1].lower()
+        
+        # Determine media type
+        video_exts = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'}
+        media_type = 'video' if ext in video_exts else 'image'
+        
+        filename = f"post_{user['id']}_{int(time.time())}.{ext}"
+        save_path = os.path.join(UPLOAD_FOLDER, filename)
         image.save(save_path)
         media_url = f"/static/uploads/posts/{filename}"
         
@@ -749,7 +854,7 @@ def api_create_post(user, post_id=None):
     )
     
     if res > 0:
-        return jsonify({'status': 'success', 'post_id': res})
+        return jsonify({'status': 'success', 'post_id': res, 'media_type': media_type})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
 
 
@@ -784,6 +889,129 @@ def api_comment_post(user, post_id):
         execute('UPDATE posts SET comments = comments + 1 WHERE id=%s', (post_id,))
         return jsonify({'status': 'success', 'comment': {'author_name': user['full_name'], 'avatar_url': user['avatar_url'], 'content': content}})
     return jsonify({'status': 'error', 'message': 'Database error'}), 500
+
+
+@app.route('/api/post/delete/<int:post_id>', methods=['POST'])
+@login_required
+def api_delete_post(user, post_id):
+    """Delete a post (author only)."""
+    user = normalise_user(user)
+    rows = query('SELECT user_id FROM posts WHERE id=%s', (post_id,))
+    if not rows:
+        return jsonify({'status': 'error', 'message': 'Post not found'}), 404
+    if rows[0]['user_id'] != user['id']:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    execute('DELETE FROM posts WHERE id=%s', (post_id,))
+    return jsonify({'status': 'success'})
+
+
+@app.route('/api/post/report/<int:post_id>', methods=['POST'])
+@login_required
+def api_report_post(user, post_id):
+    """Report an inappropriate post."""
+    user = normalise_user(user)
+    data = request.json or {}
+    reason = data.get('reason', 'Unspecified post misconduct').strip()
+
+    try:
+        execute(
+            'INSERT INTO reports (reporter_id, target_id, reason) VALUES (%s, %s, %s)',
+            (user['id'], -post_id, f"POST_REPORT: {reason}")
+        )
+    except:
+        pass
+
+    return jsonify({'status': 'success', 'message': 'Post report submitted.'})
+
+
+@app.route("/api/report/<int:other_id>", methods=["POST"])
+@login_required
+def api_report_user(user, other_id):
+    """Report a user for misconduct."""
+    user = normalise_user(user)
+    data = request.json or {}
+    reason = data.get('reason', 'No specific reason given.').strip()
+
+    try:
+        execute(
+            'INSERT INTO reports (reporter_id, target_id, reason) VALUES (%s, %s, %s)',
+            (user['id'], other_id, reason)
+        )
+        print(f"[REPORT] User {user['id']} reported {other_id} for: {reason}")
+        return jsonify({'status': 'success', 'message': 'User reported.'})
+    except Exception as e:
+        print(f"[REPORT ERROR] {e}")
+        return jsonify({'status': 'success', 'message': 'Report submitted for review.'})
+
+
+@app.route("/api/messages/<int:other_id>", methods=["GET"])
+@login_required
+def api_get_messages(user, other_id):
+    """Fetch chat history with a specific user."""
+    user = normalise_user(user)
+    rows = query(
+        '''SELECT id, sender_id, content, media_url, created_at
+           FROM messages
+           WHERE (sender_id=%s AND receiver_id=%s)
+              OR (sender_id=%s AND receiver_id=%s)
+           ORDER BY created_at ASC
+           LIMIT 50''',
+        (user['id'], other_id, other_id, user['id'])
+    )
+    return jsonify({'status': 'success', 'messages': rows if rows else []})
+
+
+@app.route("/api/messages/send", methods=["POST"])
+@login_required
+def api_send_message(user):
+    """Send a private message."""
+    user = normalise_user(user)
+
+    # Can be multipart (with file) or json
+    if request.is_json:
+        data = request.json or {}
+        receiver_id = data.get('receiver_id')
+        content = data.get('content', '').strip()
+        media_file = None
+        print(f"[CHAT] Received JSON message: {content} to user {receiver_id}")
+    else:
+        receiver_id = request.form.get('receiver_id')
+        content = request.form.get('content', '').strip()
+        media_file = request.files.get('file')
+        print(f"[CHAT] Received Form message: {content} to user {receiver_id}, media: {media_file.filename if media_file else 'None'}")
+
+    if not receiver_id or (not content and not media_file):
+        return jsonify({'status': 'error', 'message': 'Missing recipient or content'}), 400
+
+    media_url = None
+    if media_file:
+        try:
+            ext = 'jpg'
+            if '.' in media_file.filename:
+                ext = media_file.filename.rsplit('.', 1)[1].lower()
+            fname = f"msg_{user['id']}_{int(time.time())}.{ext}"
+            save_path = os.path.join(MSG_UPLOAD_FOLDER, fname)
+            media_file.save(save_path)
+            media_url = f"/static/uploads/messages/{fname}"
+            print(f"[CHAT] Media saved: {media_url}")
+        except Exception as e:
+            print(f"[CHAT ERROR] File upload failed: {e}")
+            return jsonify({'status': 'error', 'message': f'File upload failed: {e}'}), 500
+
+    try:
+        # Convert receiver_id to int to be safe
+        rid = int(receiver_id)
+        res = execute(
+            'INSERT INTO messages (sender_id, receiver_id, content, media_url) VALUES (%s, %s, %s, %s)',
+            (user['id'], rid, content, media_url)
+        )
+        if res > 0:
+            return jsonify({'status': 'success', 'message_id': res, 'media_url': media_url})
+        return jsonify({'status': 'error', 'message': 'Database error'}), 500
+    except Exception as e:
+        print(f"[CHAT ERROR] DB Insert failed: {e}")
+        return jsonify({'status': 'error', 'message': f'Insert failed: {e}'}), 500
 
 
 @app.route("/network")

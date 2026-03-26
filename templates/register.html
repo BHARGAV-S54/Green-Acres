@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    {% if google_client_id %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    {% endif %}
     <style>
         .input-status { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 14px; }
         .input-valid { color: #22c55e; }
@@ -24,7 +27,7 @@
                 <div class="brand-logo">
                     <img src="/static/images/logo.png" alt="GreenAcres" style="height:50px; width:auto; margin-bottom:10px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="brand-text-fallback" style="display:flex; align-items:center; gap:10px;">
-                        <div class="brand-logo-icon"><i class="fa-solid fa-tractor"></i></div>
+                        <img src="/static/images/logo.png" alt="GreenAcres" style="height:36px; width:36px; border-radius:50%; object-fit:cover;">
                         <span style="font-size:24px; font-weight:800; color:white;">GreenAcres</span>
                     </div>
 
@@ -135,11 +138,30 @@
                     <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
                 </div>
 
-                <!-- Placeholder Google Sign In Button -->
-                <button type="button" class="auth-btn" style="background:#fff; color:#475569; border:1px solid #e2e8f0; margin-bottom:15px; font-weight:600;" onclick="alert('Google Auth is enabled! Replace placeholder Client ID in code to activate fully.')">
+                <!-- Google Sign In Button -->
+                {% if google_client_id %}
+                <div id="g_id_onload"
+                     data-client_id="{{ google_client_id }}"
+                     data-context="signup"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signup_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     style="margin-bottom:15px; display: flex; justify-content: center;">
+                </div>
+                {% else %}
+                <button type="button" class="auth-btn" style="background:#fff; color:#475569; border:1px solid #e2e8f0; margin-bottom:15px; font-weight:600;" onclick="alert('Google Auth is disabled. Set GOOGLE_CLIENT_ID in .env')">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="G" style="width:18px; height:18px; margin-right:8px; vertical-align:middle;">
-                    Sign up with Google
+                    Sign up with Google (Offline)
                 </button>
+                {% endif %}
 
                 <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
             </div>
@@ -156,6 +178,36 @@
             } else {
                 input.type = 'password';
                 icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        async function handleGoogleLogin(response) {
+            const errorDiv = document.getElementById('register-error');
+            const successDiv = document.getElementById('register-success');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            try {
+                const res = await fetch('/api/google-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('reg-success-message').textContent = data.message;
+                    successDiv.style.display = 'flex';
+                    setTimeout(() => { window.location.href = '/'; }, 500);
+                } else {
+                    document.getElementById('reg-error-message').textContent = data.message;
+                    errorDiv.style.display = 'flex';
+                }
+            } catch (err) {
+                document.getElementById('reg-error-message').textContent = 'Connection error during Google signup.';
+                errorDiv.style.display = 'flex';
             }
         }
 

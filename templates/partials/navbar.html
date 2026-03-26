@@ -3,14 +3,8 @@
     <div class="nav-container">
 
         <a href="/" class="logo" id="logo-link">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="GreenAcres" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="logo-text-wrap">
-                <div class="logo-icon-bg">
-                    <i class="fa-solid fa-tractor logo-icon"></i>
-                </div>
-                <span class="logo-text">GreenAcres</span>
-            </div>
-
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="GreenAcres" style="height:36px; width:36px; border-radius:50%; object-fit:cover;">
+            <span class="logo-text">GreenAcres</span>
         </a>
 
 
@@ -47,11 +41,18 @@
                     <small>{{ user.email if user.email else user.username }}</small>
                 </div>
 
+                <a href="/profile/{{ user.id }}" class="dropdown-item">
+                    <i class="fa-solid fa-user"></i> View Profile
+                </a>
                 <a href="#" class="dropdown-item">
                     <i class="fa-solid fa-gear"></i> Settings
                 </a>
                 <a href="#" class="dropdown-item danger" id="logout-btn" onclick="logout(); return false;">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+                <hr style="border:none; border-top:1px solid #e2e8f0; margin:5px 0;">
+                <a href="#" class="dropdown-item" style="color:#ef4444; font-size:12px;" onclick="deleteAccount(); return false;">
+                    <i class="fa-solid fa-trash"></i> Delete Account
                 </a>
             </div>
         </div>
@@ -81,6 +82,22 @@
             await fetch('/api/logout', { method: 'POST' });
         } catch {}
         window.location.href = '/login';
+    }
+    async function deleteAccount() {
+        if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+            try {
+                const resp = await fetch('/api/account/delete', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    alert('Account deleted successfully.');
+                    window.location.href = '/login';
+                } else {
+                    alert('Failed to delete account.');
+                }
+            } catch {
+                alert('Error deleting account.');
+            }
+        }
     }
 </script>
 

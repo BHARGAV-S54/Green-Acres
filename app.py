@@ -50,22 +50,18 @@ except Exception as e:
 # ──────────────────────────────────────────────
 #  Database helpers
 # ──────────────────────────────────────────────
-# Robust production config (compatible with Aiven/TiDB/PlanetScale)
+# Matches the Implemention Plan: MYSQL_HOST, MYSQL_PORT, etc.
 DB_CONFIG = {
-    "host": os.environ.get("MYSQLHOST", "127.0.0.1"),
-    "user": os.environ.get("MYSQLUSER", "root"),
-    "password": os.environ.get("MYSQLPASSWORD", "root"),
-    "database": os.environ.get("MYSQLDATABASE", "agriconnect_db"),
-    "port": int(os.environ.get("MYSQLPORT", "3306")),
+    "host": os.environ.get("MYSQL_HOST") or os.environ.get("MYSQLHOST", "127.0.0.1"),
+    "user": os.environ.get("MYSQL_USER") or os.environ.get("MYSQLUSER", "root"),
+    "password": os.environ.get("MYSQL_PASSWORD") or os.environ.get("MYSQLPASSWORD", "root"),
+    "database": os.environ.get("MYSQL_DATABASE") or os.environ.get("MYSQLDATABASE", "agriconnect_db"),
+    "port": int(os.environ.get("MYSQL_PORT") or os.environ.get("MYSQLPORT") or 3306),
     "charset": "utf8mb4",
-    "connection_timeout": 10,  # Prevent hanging for 2 minutes
+    "connection_timeout": 10,
+    "use_pure": True, # Force pure-python to avoid buggy C-extension issues on Windows
+    "ssl_disabled": False if (os.environ.get("MYSQL_SSL_CA") or os.environ.get("MYSQLSSL") == "TRUE") else True
 }
-
-# Optional SSL support for remote MySQL providers
-if os.environ.get("MYSQLSSL") == "TRUE":
-    # For Aiven/TiDB: basic SSL often requires use_ssl=True or ssl_ca
-    DB_CONFIG["use_ssl"] = True
-    DB_CONFIG["ssl_verify_cert"] = False  # Set to True if providing a cert file
 
 
 def get_db():

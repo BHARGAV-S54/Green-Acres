@@ -1,13 +1,6 @@
--- ════════════════════════════════════════
---   GreenAcres Database Schema
--- ════════════════════════════════════════
-CREATE DATABASE IF NOT EXISTS greenacres_db
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE greenacres_db;
-
--- ── Users (main accounts) ─────────────────────────────
+-- ─────────────────────────────────────────────
+-- Users (main accounts)
+-- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     full_name     VARCHAR(120) NOT NULL,

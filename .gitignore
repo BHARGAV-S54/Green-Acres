@@ -8,3 +8,6 @@ static/uploads/
 check_msgs.py
 debug_db.py
 migrate_backend.py
+setup_aiven.py
+test_db_debug.py
+ca.pem

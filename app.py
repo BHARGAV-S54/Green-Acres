@@ -47,12 +47,12 @@ os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
 #  Database helpers
 # ──────────────────────────────────────────────
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "user": "root",
-    "password": "root",
-    "database": "agriconnect_db",
+    "host": os.environ.get("MYSQLHOST", "127.0.0.1"),
+    "user": os.environ.get("MYSQLUSER", "root"),
+    "password": os.environ.get("MYSQLPASSWORD", "root"),
+    "database": os.environ.get("MYSQLDATABASE", "agriconnect_db"),
+    "port": int(os.environ.get("MYSQLPORT", "3306")),
     "charset": "utf8mb4",
-
 }
 
 

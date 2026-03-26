@@ -58,14 +58,14 @@ DB_CONFIG = {
     "database": os.environ.get("MYSQLDATABASE", "agriconnect_db"),
     "port": int(os.environ.get("MYSQLPORT", "3306")),
     "charset": "utf8mb4",
+    "connection_timeout": 10,  # Prevent hanging for 2 minutes
 }
 
 # Optional SSL support for remote MySQL providers
 if os.environ.get("MYSQLSSL") == "TRUE":
-    DB_CONFIG["ssl_disabled"] = False
-    # Some providers need a CA cert. On Vercel, you can put it in /tmp or path.
-    # For many, just setting sslmode is enough.
-    # DB_CONFIG["ssl_ca"] = "/path/to/ca.pem"
+    # For Aiven/TiDB: basic SSL often requires use_ssl=True or ssl_ca
+    DB_CONFIG["use_ssl"] = True
+    DB_CONFIG["ssl_verify_cert"] = False  # Set to True if providing a cert file
 
 
 def get_db():

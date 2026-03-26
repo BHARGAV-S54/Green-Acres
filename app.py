@@ -46,6 +46,7 @@ os.makedirs(MARKET_UPLOAD_FOLDER, exist_ok=True)
 # ──────────────────────────────────────────────
 #  Database helpers
 # ──────────────────────────────────────────────
+# Robust production config (compatible with Aiven/TiDB/PlanetScale)
 DB_CONFIG = {
     "host": os.environ.get("MYSQLHOST", "127.0.0.1"),
     "user": os.environ.get("MYSQLUSER", "root"),
@@ -55,13 +56,20 @@ DB_CONFIG = {
     "charset": "utf8mb4",
 }
 
+# Optional SSL support for remote MySQL providers
+if os.environ.get("MYSQLSSL") == "TRUE":
+    DB_CONFIG["ssl_disabled"] = False
+    # Some providers need a CA cert. On Vercel, you can put it in /tmp or path.
+    # For many, just setting sslmode is enough.
+    # DB_CONFIG["ssl_ca"] = "/path/to/ca.pem"
+
 
 def get_db():
     """Return a new MySQL connection, or None if unavailable."""
     try:
         return mysql.connector.connect(**DB_CONFIG)
     except mysql.connector.Error as e:
-        print(f"[DB] Connection error: {e}")
+        print(f"[PROD-DB] Critical Connection error: {e}")
         return None
 
 
@@ -75,10 +83,11 @@ def query(sql, params=(), one=False):
         cur.execute(sql, params)
         return cur.fetchone() if one else cur.fetchall()
     except Exception as e:
-        print(f"[DB] Query error: {e}")
+        print(f"[PROD-DB] Query error: {e}")
         return None if one else []
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def execute(sql, params=()):
@@ -92,21 +101,33 @@ def execute(sql, params=()):
         conn.commit()
         return cur.lastrowid
     except mysql.connector.IntegrityError as e:
-        print(f"[DB] Integrity error: {e}")
+        print(f"[PROD-DB] Integrity error: {e}")
         return -2  # unique constraint violation
     except Exception as e:
-        print(f"[DB] Execute error: {e}")
+        print(f"[PROD-DB] Execute error: {e}")
         return -1
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 # ──────────────────────────────────────────────
-#  Password helpers  (SHA-256, works with no extras)
+#  Error Handlers 
+# ──────────────────────────────────────────────
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('not_found.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return "Oops! AgriConnect encountered a glitch. Check your database connection settings in the Vercel dashboard.", 500
+
+
+# ──────────────────────────────────────────────
+#  Password helpers (SHA-256)
 # ──────────────────────────────────────────────
 def hash_password(plain: str) -> str:
     return hashlib.sha256(plain.encode()).hexdigest()
-
 
 def check_password(plain: str, hashed: str) -> bool:
     return hash_password(plain) == hashed
@@ -124,7 +145,6 @@ def create_token(user_id: int, username: str) -> str:
         "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXP_HOURS),
     }
     encoded = jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
-    # Ensure it's a string, not bytes (v1.x vs v2.x of PyJWT)
     if isinstance(encoded, bytes):
         return encoded.decode('utf-8')
     return encoded
@@ -382,7 +402,7 @@ def login_post():
             token = create_token(0, "demo_farmer")
             resp = make_response(redirect("/"))
             resp.set_cookie(
-                COOKIE_NAME, token, httponly=True, max_age=JWT_EXP_HOURS * 3600
+                COOKIE_NAME, token, httponly=True, secure=True, samesite="Lax", max_age=JWT_EXP_HOURS * 3600
             )
             return resp
         return render_template("login.html", error="Invalid credentials.")
@@ -396,7 +416,7 @@ def login_post():
     token = create_token(user["id"], user["username"])
     resp = make_response(redirect("/"))
     resp.set_cookie(
-        COOKIE_NAME, token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite="Lax"
+        COOKIE_NAME, token, httponly=True, secure=True, samesite="Lax", max_age=JWT_EXP_HOURS * 3600
     )
     return resp
 
@@ -573,7 +593,7 @@ def api_login():
             }
         )
     )
-    resp.set_cookie(COOKIE_NAME, token, httponly=True, max_age=max_age, samesite="Lax")
+    resp.set_cookie(COOKIE_NAME, token, httponly=True, secure=True, samesite="Lax", max_age=max_age)
     return resp
 
 
@@ -632,7 +652,7 @@ def api_google_login():
         app_token = create_token(user_id, username)
         
         resp = make_response(jsonify({"success": True, "message": "Google login successful"}))
-        resp.set_cookie(COOKIE_NAME, app_token, httponly=True, max_age=JWT_EXP_HOURS * 3600, samesite="Lax")
+        resp.set_cookie(COOKIE_NAME, app_token, httponly=True, secure=True, samesite="Lax", max_age=JWT_EXP_HOURS * 3600)
         return resp
 
     except ValueError:
